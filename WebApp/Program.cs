@@ -20,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("Default");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql("Host=127.0.0.1;Port=5432;Username=postgres;Password=postgres;database=postgres;"));
+    options.UseNpgsql("Host=placeholder.postgres.database.azure.com;Port=5432;Username=pass;Password=Support1;database=postgres;"));
 
 builder.Services.AddScoped<IAppUnitOfWork, AppUOW>();
 builder.Services.AddScoped<IAppBLL, AppBLL>();

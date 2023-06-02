@@ -63,7 +63,5 @@ public class IntegrationTestPostApiController : IClassFixture<CustomWebApplicati
         var response = await _client.GetAsync($"api/v1.0/UserPost/GetUserPost?id=0");
             Assert.Equal(HttpStatusCode.NotFound,response.StatusCode);
     }
-    [Fact]
-    public async void Test_Post_Post
-    
+
 }
