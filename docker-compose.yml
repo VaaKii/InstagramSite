@@ -1,0 +1,18 @@
+services:
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 80:8080
+
+  db:
+    image: postgres:latest
+    restart: on-failure
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data
+volumes:
+  postgres-volume:

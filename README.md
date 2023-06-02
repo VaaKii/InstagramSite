@@ -1,0 +1,11 @@
+- dotnet ef migrations --project App.DAL.EF --startup-project WebApp add Initial
+- dotnet ef database --project App.DAL.EF --startup-project WebApp update
+- dotnet ef database --project App.DAL.EF --startup-project WebApp drop
+
+- dotnet aspnet-codegenerator controller -name DirectMessagesController        -actions -m  App.Domain.DirectMessage        -dc AppDbContext -outDir Controllers --useDefaultLayout --useAsyncActions --referenceScriptLibraries -f
+- dotnet aspnet-codegenerator controller -name FollowsController        -actions -m  App.Domain.Follow        -dc AppDbContext -outDir Controllers --useDefaultLayout --useAsyncActions --referenceScriptLibraries -f
+- dotnet aspnet-codegenerator controller -name TopicsController        -actions -m  App.Domain.Topic        -dc AppDbContext -outDir Controllers --useDefaultLayout --useAsyncActions --referenceScriptLibraries -f
+- dotnet aspnet-codegenerator controller -name UserCommentController        -actions -m  App.Domain.UserComment        -dc AppDbContext -outDir Controllers --useDefaultLayout --useAsyncActions --referenceScriptLibraries -f
+- dotnet aspnet-codegenerator controller -name UserHashtagController        -actions -m  App.Domain.UserHashtag        -dc AppDbContext -outDir Controllers --useDefaultLayout --useAsyncActions --referenceScriptLibraries -f
+- dotnet aspnet-codegenerator controller -name UserPostsController        -actions -m  App.Domain.UserPost        -dc AppDbContext -outDir Controllers --useDefaultLayout --useAsyncActions --referenceScriptLibraries -f
+- dotnet aspnet-codegenerator controller -name UserStoriesController        -actions -m  App.Domain.UserStories        -dc AppDbContext -outDir Controllers --useDefaultLayout --useAsyncActions --referenceScriptLibraries -f
