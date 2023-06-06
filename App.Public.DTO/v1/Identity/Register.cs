@@ -11,10 +11,10 @@ public class Register : IDomainEntityId
     public string Password { get; set; } = default!;
 
     [StringLength(maximumLength: 128, MinimumLength = 1, ErrorMessage = "Wrong length on FirstName")]
-    public string Firstname { get; set; } = default!;
+    public string? Firstname { get; set; } = "sdfasdffdsf";
 
     [StringLength(maximumLength: 128, MinimumLength = 1, ErrorMessage = "Wrong length on LastName")]
-    public string Lastname { get; set; } = default!;
+    public string? Lastname { get; set; } = "sdfsdfsdf";
 
     public Guid Id { get; set; }
 }

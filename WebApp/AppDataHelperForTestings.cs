@@ -61,7 +61,7 @@ public class AppDataHelperForTesting
             var users = new (string username,string firstName,string lastName, string password, string roles)[]
             {
                 ("admin@itcollege.ee","Admin", "College", "123456", "user, admin"),
-                ("user@itcollege.ee","Ahmed", "Abdullajev", "123456", "user"),
+                ("user@itcollege.ee","User", "Abdullajev", "123456", "user"),
                 ("newuser@itcollege.ee", "User", "College", "123456", "")
             };
 

@@ -53,14 +53,14 @@ public class IntegrationTestPostApiController : IClassFixture<CustomWebApplicati
     [Fact]
     public async void Test_Get_Posts()
     {
-        var response = await _client.GetAsync("api/v1.0/UserPost/GetUserPosts");
+        var response = await _client.GetAsync("api/v1.0/UserPost");
         Assert.Equal(HttpStatusCode.OK,response.StatusCode);
     }
 
     [Fact]
     public async void Test_Get_Post_Not_Existing_Id()
     {
-        var response = await _client.GetAsync($"api/v1.0/UserPost/GetUserPost?id=0");
+        var response = await _client.GetAsync($"api/v1.0/UserPost?id=783465294583746");
             Assert.Equal(HttpStatusCode.NotFound,response.StatusCode);
     }
 

@@ -1,8 +1,44 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model WebApp.ViewModels.UserPostViewModel
+
+@{
+    ViewBag.Title = "Posts";
+    Layout = "_Layout";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+
+@foreach (var post in Model.Posts)
+{
+    <div class="card mb-3" style="max-width: 18rem;">
+        <div class="card-header bg-transparent ">
+            <p>@post.Title</p>
+            <p>@post.Text</p>
+        </div>
+        <div class="card-body ">
+            <img class="card-img-bottom" src="@post.UrlPhoto"></img>
+        </div>
+        <div class="card-footer bg-transparent">
+            <div class="d-flex flex-row">
+                <form asp-action="Post">
+                <button type="submit" value="Post" class="bi bi-heart btn btn-ligh"></button>
+                </form>
+                @if (post.UserLikes == null)
+                {
+                    <p>0</p>
+                }
+                else
+                {
+                    <p>@post.UserLikes.Count</p>
+                }
+                <button class="bi bi-chat-left-dots-fill btn btn-ligh"></button>
+                @if (post.UserComments == null)
+                {
+                    <p>0</p>
+                }
+                else
+                {
+                    <p>@post.UserComments.Count</p>
+                }
+            </div>
+            </div>
+    </div>
+}

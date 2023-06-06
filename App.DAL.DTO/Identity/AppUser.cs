@@ -7,9 +7,9 @@ namespace App.DAL.DTO.Identity;
 public class AppUser : BaseUser
 {
     [StringLength(128)]
-    public string Firstname { get; set; } = default!;
+    public string? Firstname { get; set; }
 
-    [StringLength(128)] public string Lastname { get; set; } = default!;
+    [StringLength(128)] public string? Lastname { get; set; }
 
 
     public ICollection<UserPost>? UserPosts { get; set; }
