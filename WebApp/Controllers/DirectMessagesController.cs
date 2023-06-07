@@ -23,16 +23,14 @@ namespace WebApp.Controllers
         }
 
         // GET: DirectMessages/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+        public async Task<IActionResult> Details(Guid id)
         {
             if (id == null || _bll.DirectMessages == null)
             {
                 return NotFound();
             }
 
-            var directMessage = await _bll.DirectMessages
-                .Include(d => d.AppUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var directMessage = await _bll.DirectMessages.FirstOrDefaultAsync(id, User.GetUserId());
             if (directMessage == null)
             {
                 return NotFound();
