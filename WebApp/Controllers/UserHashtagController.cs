@@ -1,20 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
 using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class UserHashtagController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _context;
 
-        public UserHashtagController(AppDbContext context)
+        public UserHashtagController(IAppBll context)
         {
             _context = context;
         }
@@ -24,7 +18,7 @@ namespace WebApp.Controllers
         {
               return _context.UserHashtags != null ? 
                           View(await _context.UserHashtags.ToListAsync()) :
-                          Problem("Entity set 'AppDbContext.UserHashtags'  is null.");
+                          Problem("Entity set 'IAppBll.UserHashtags'  is null.");
         }
 
         // GET: UserHashtag/Details/5
@@ -144,7 +138,7 @@ namespace WebApp.Controllers
         {
             if (_context.UserHashtags == null)
             {
-                return Problem("Entity set 'AppDbContext.UserHashtags'  is null.");
+                return Problem("Entity set 'IAppBll.UserHashtags'  is null.");
             }
             var userHashtag = await _context.UserHashtags.FindAsync(id);
             if (userHashtag != null)

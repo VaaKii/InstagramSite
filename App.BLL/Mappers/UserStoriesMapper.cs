@@ -3,7 +3,7 @@ using Base.DAL;
 
 namespace App.BLL.Mappers;
 
-public class UserStoriesMapper: BaseMapper<App.BLL.DTO.UserStories, App.DAL.DTO.UserStories>
+public class UserStoriesMapper: BaseMapper<DTO.UserStory, App.DAL.DTO.UserStory>
 {
     public UserStoriesMapper(IMapper mapper) : base(mapper)
     {

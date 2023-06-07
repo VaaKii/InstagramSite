@@ -1,20 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
 using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class UserPostsController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _context;
 
-        public UserPostsController(AppDbContext context)
+        public UserPostsController(IAppBll context)
         {
             _context = context;
         }
@@ -49,7 +44,7 @@ namespace WebApp.Controllers
         // GET: UserPosts/Create
         public IActionResult Create()
         {
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
             ViewData["TopicId"] = new SelectList(_context.Topics, "Id", "Id");
             return View();
         }
@@ -59,7 +54,7 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Text,TopicId,UrlPhoto,AppUserId,CreatedAt,Id")] UserPost userPost)
+        public async Task<IActionResult> Create([Bind("Title,Text,TopicId,UrlPhoto,AuthorId,CreatedAt,Id")] UserPost userPost)
         {
             if (ModelState.IsValid)
             {
@@ -68,7 +63,7 @@ namespace WebApp.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userPost.AppUserId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userPost.AppUserId);
             ViewData["TopicId"] = new SelectList(_context.Topics, "Id", "Id", userPost.TopicId);
             return View(userPost);
         }
@@ -86,7 +81,7 @@ namespace WebApp.Controllers
             {
                 return NotFound();
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userPost.AppUserId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userPost.AppUserId);
             ViewData["TopicId"] = new SelectList(_context.Topics, "Id", "Id", userPost.TopicId);
             return View(userPost);
         }
@@ -96,7 +91,7 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Title,Text,TopicId,UrlPhoto,AppUserId,CreatedAt,Id")] UserPost userPost)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Title,Text,TopicId,UrlPhoto,AuthorId,CreatedAt,Id")] UserPost userPost)
         {
             if (id != userPost.Id)
             {
@@ -123,7 +118,7 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userPost.AppUserId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userPost.AppUserId);
             ViewData["TopicId"] = new SelectList(_context.Topics, "Id", "Id", userPost.TopicId);
             return View(userPost);
         }
@@ -155,7 +150,7 @@ namespace WebApp.Controllers
         {
             if (_context.UserPosts == null)
             {
-                return Problem("Entity set 'AppDbContext.UserPosts'  is null.");
+                return Problem("Entity set 'IAppBll.UserPosts'  is null.");
             }
             var userPost = await _context.UserPosts.FindAsync(id);
             if (userPost != null)

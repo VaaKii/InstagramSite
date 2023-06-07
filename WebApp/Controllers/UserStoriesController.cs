@@ -1,32 +1,27 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
 using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class UserStoriesController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _context;
 
-        public UserStoriesController(AppDbContext context)
+        public UserStoriesController(IAppBll context)
         {
             _context = context;
         }
 
-        // GET: UserStories
+        // GET: UserStory
         public async Task<IActionResult> Index()
         {
             var appDbContext = _context.UserStories.Include(u => u.AppUser);
             return View(await appDbContext.ToListAsync());
         }
 
-        // GET: UserStories/Details/5
+        // GET: UserStory/Details/5
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null || _context.UserStories == null)
@@ -45,32 +40,32 @@ namespace WebApp.Controllers
             return View(userStories);
         }
 
-        // GET: UserStories/Create
+        // GET: UserStory/Create
         public IActionResult Create()
         {
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
             return View();
         }
 
-        // POST: UserStories/Create
+        // POST: UserStory/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AppUserId,UrlPhoto,CreatedAt,Id")] UserStories userStories)
+        public async Task<IActionResult> Create([Bind("AuthorId,UrlPhoto,CreatedAt,Id")] UserStory userStory)
         {
             if (ModelState.IsValid)
             {
-                userStories.Id = Guid.NewGuid();
-                _context.Add(userStories);
+                userStory.Id = Guid.NewGuid();
+                _context.Add(userStory);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userStories.AppUserId);
-            return View(userStories);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userStory.AppUserId);
+            return View(userStory);
         }
 
-        // GET: UserStories/Edit/5
+        // GET: UserStory/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
             if (id == null || _context.UserStories == null)
@@ -83,18 +78,18 @@ namespace WebApp.Controllers
             {
                 return NotFound();
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userStories.AppUserId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userStories.AppUserId);
             return View(userStories);
         }
 
-        // POST: UserStories/Edit/5
+        // POST: UserStory/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("AppUserId,UrlPhoto,CreatedAt,Id")] UserStories userStories)
+        public async Task<IActionResult> Edit(Guid id, [Bind("AuthorId,UrlPhoto,CreatedAt,Id")] UserStory userStory)
         {
-            if (id != userStories.Id)
+            if (id != userStory.Id)
             {
                 return NotFound();
             }
@@ -103,12 +98,12 @@ namespace WebApp.Controllers
             {
                 try
                 {
-                    _context.Update(userStories);
+                    _context.Update(userStory);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UserStoriesExists(userStories.Id))
+                    if (!UserStoriesExists(userStory.Id))
                     {
                         return NotFound();
                     }
@@ -119,11 +114,11 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userStories.AppUserId);
-            return View(userStories);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userStory.AppUserId);
+            return View(userStory);
         }
 
-        // GET: UserStories/Delete/5
+        // GET: UserStory/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
             if (id == null || _context.UserStories == null)
@@ -142,14 +137,14 @@ namespace WebApp.Controllers
             return View(userStories);
         }
 
-        // POST: UserStories/Delete/5
+        // POST: UserStory/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             if (_context.UserStories == null)
             {
-                return Problem("Entity set 'AppDbContext.UserStories'  is null.");
+                return Problem("Entity set 'IAppBll.UserStory'  is null.");
             }
             var userStories = await _context.UserStories.FindAsync(id);
             if (userStories != null)

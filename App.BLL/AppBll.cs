@@ -9,12 +9,12 @@ using Base.BLL;
 
 namespace App.BLL;
 
-public class AppBLL: BaseBll<IAppUnitOfWork> ,IAppBLL
+public class AppBll: BaseBll<IAppUnitOfWork>, IAppBll
 {
-    private readonly AutoMapper.IMapper _mapper;
+    private readonly IMapper _mapper;
 
     protected IAppUnitOfWork UnitOfWork;
-    public AppBLL(IAppUnitOfWork unitOfWork, IMapper mapper)
+    public AppBll(IAppUnitOfWork unitOfWork, IMapper mapper)
     {
         UnitOfWork = unitOfWork;
         _mapper = mapper;
@@ -68,4 +68,8 @@ public class AppBLL: BaseBll<IAppUnitOfWork> ,IAppBLL
     private IUserStoriesService? _userStories;
     public IUserStoriesService UserStories =>
         _userStories ??= new UserStoriesService(UnitOfWork.UserStories, new UserStoriesMapper(_mapper));
+    
+    private IRefreshTokenService? _refreshTokens;
+    public IRefreshTokenService RefreshTokens =>
+        _refreshTokens ??= new RefreshTokenService(UnitOfWork.RefreshTokens, new RefreshTokenMapper(_mapper));
 }

@@ -13,4 +13,5 @@ public interface IAppUnitOfWork : IUnitOfWork
     ITopicRepository Topics { get; }
     IUserCommentRepository UserComments { get; }
     IUserPostRepository UserPosts { get; }
+    IRefreshTokenRepository RefreshTokens { get; }
 }

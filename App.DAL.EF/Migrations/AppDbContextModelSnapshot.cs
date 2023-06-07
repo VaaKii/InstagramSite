@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace App.DAL.EF.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
+    [DbContext(typeof(IAppBll))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
@@ -29,7 +29,7 @@ namespace App.DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AppUserId")
+                    b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -38,12 +38,12 @@ namespace App.DAL.EF.Migrations
                     b.Property<string>("Message")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("SenderId")
+                    b.Property<Guid>("ReceiverId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AppUserId");
+                    b.HasIndex("AuthorId");
 
                     b.ToTable("DirectMessages");
                 });
@@ -54,7 +54,7 @@ namespace App.DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AppUserId")
+                    b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -62,7 +62,7 @@ namespace App.DAL.EF.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AppUserId");
+                    b.HasIndex("AuthorId");
 
                     b.ToTable("Follows");
                 });
@@ -94,7 +94,7 @@ namespace App.DAL.EF.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("App.Domain.Identity.AppUser", b =>
+            modelBuilder.Entity("App.Domain.Identity.Author", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -173,7 +173,7 @@ namespace App.DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AppUserId")
+                    b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("PreviousToken")
@@ -193,7 +193,7 @@ namespace App.DAL.EF.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AppUserId");
+                    b.HasIndex("AuthorId");
 
                     b.ToTable("RefreshTokens");
                 });
@@ -226,7 +226,7 @@ namespace App.DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AppUserId")
+                    b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("CommentText")
@@ -241,7 +241,7 @@ namespace App.DAL.EF.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AppUserId");
+                    b.HasIndex("AuthorId");
 
                     b.HasIndex("UserPostId");
 
@@ -272,7 +272,7 @@ namespace App.DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AppUserId")
+                    b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -283,7 +283,7 @@ namespace App.DAL.EF.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AppUserId");
+                    b.HasIndex("AuthorId");
 
                     b.HasIndex("UserPostId");
 
@@ -296,7 +296,7 @@ namespace App.DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AppUserId")
+                    b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -318,20 +318,20 @@ namespace App.DAL.EF.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AppUserId");
+                    b.HasIndex("AuthorId");
 
                     b.HasIndex("TopicId");
 
                     b.ToTable("UserPosts");
                 });
 
-            modelBuilder.Entity("App.Domain.UserStories", b =>
+            modelBuilder.Entity("App.Domain.UserStory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("AppUserId")
+                    b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -342,9 +342,9 @@ namespace App.DAL.EF.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AppUserId");
+                    b.HasIndex("AuthorId");
 
-                    b.ToTable("UserStories");
+                    b.ToTable("UserStory");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -467,42 +467,42 @@ namespace App.DAL.EF.Migrations
 
             modelBuilder.Entity("App.Domain.DirectMessage", b =>
                 {
-                    b.HasOne("App.Domain.Identity.AppUser", "AppUser")
+                    b.HasOne("App.Domain.Identity.Author", "Author")
                         .WithMany("DirectMessages")
-                        .HasForeignKey("AppUserId")
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AppUser");
+                    b.Navigation("Author");
                 });
 
             modelBuilder.Entity("App.Domain.Follow", b =>
                 {
-                    b.HasOne("App.Domain.Identity.AppUser", "AppUser")
+                    b.HasOne("App.Domain.Identity.Author", "Author")
                         .WithMany()
-                        .HasForeignKey("AppUserId")
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AppUser");
+                    b.Navigation("Author");
                 });
 
             modelBuilder.Entity("App.Domain.Identity.RefreshToken", b =>
                 {
-                    b.HasOne("App.Domain.Identity.AppUser", "AppUser")
+                    b.HasOne("App.Domain.Identity.Author", "Author")
                         .WithMany("RefreshTokens")
-                        .HasForeignKey("AppUserId")
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AppUser");
+                    b.Navigation("Author");
                 });
 
             modelBuilder.Entity("App.Domain.UserComment", b =>
                 {
-                    b.HasOne("App.Domain.Identity.AppUser", "AppUser")
+                    b.HasOne("App.Domain.Identity.Author", "Author")
                         .WithMany()
-                        .HasForeignKey("AppUserId")
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -512,16 +512,16 @@ namespace App.DAL.EF.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AppUser");
+                    b.Navigation("Author");
 
                     b.Navigation("UserPost");
                 });
 
             modelBuilder.Entity("App.Domain.UserLike", b =>
                 {
-                    b.HasOne("App.Domain.Identity.AppUser", "AppUser")
+                    b.HasOne("App.Domain.Identity.Author", "Author")
                         .WithMany()
-                        .HasForeignKey("AppUserId")
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -531,16 +531,16 @@ namespace App.DAL.EF.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AppUser");
+                    b.Navigation("Author");
 
                     b.Navigation("UserPost");
                 });
 
             modelBuilder.Entity("App.Domain.UserPost", b =>
                 {
-                    b.HasOne("App.Domain.Identity.AppUser", "AppUser")
+                    b.HasOne("App.Domain.Identity.Author", "Author")
                         .WithMany("UserPosts")
-                        .HasForeignKey("AppUserId")
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -550,20 +550,20 @@ namespace App.DAL.EF.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AppUser");
+                    b.Navigation("Author");
 
                     b.Navigation("Topic");
                 });
 
-            modelBuilder.Entity("App.Domain.UserStories", b =>
+            modelBuilder.Entity("App.Domain.UserStory", b =>
                 {
-                    b.HasOne("App.Domain.Identity.AppUser", "AppUser")
+                    b.HasOne("App.Domain.Identity.Author", "Author")
                         .WithMany("Stories")
-                        .HasForeignKey("AppUserId")
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AppUser");
+                    b.Navigation("Author");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -577,7 +577,7 @@ namespace App.DAL.EF.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("App.Domain.Identity.AppUser", null)
+                    b.HasOne("App.Domain.Identity.Author", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -586,7 +586,7 @@ namespace App.DAL.EF.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("App.Domain.Identity.AppUser", null)
+                    b.HasOne("App.Domain.Identity.Author", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -601,7 +601,7 @@ namespace App.DAL.EF.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("App.Domain.Identity.AppUser", null)
+                    b.HasOne("App.Domain.Identity.Author", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -610,7 +610,7 @@ namespace App.DAL.EF.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("App.Domain.Identity.AppUser", null)
+                    b.HasOne("App.Domain.Identity.Author", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -632,7 +632,7 @@ namespace App.DAL.EF.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("App.Domain.Identity.AppUser", b =>
+            modelBuilder.Entity("App.Domain.Identity.Author", b =>
                 {
                     b.Navigation("DirectMessages");
 

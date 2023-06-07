@@ -1,125 +1,89 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using App.Contracts.BLL;
+using AutoMapper;
+using Base.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
-using App.Domain;
 
 namespace WebApp.ApiControllers
 {
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    public class UserCommentController : ControllerBase
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public class UserCommentsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _bll;
+        private readonly UserCommentMapper _mapper;
 
-        public UserCommentController(AppDbContext context)
+        public UserCommentsController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new UserCommentMapper(mapper);
         }
 
         // GET: api/UserComment
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserComment>>> GetUserComments()
+        public async Task<ActionResult<IEnumerable<UserComment>>> GetAll()
         {
-          if (_context.UserComments == null)
-          {
-              return NotFound();
-          }
-            return await _context.UserComments.ToListAsync();
+            var items = await _bll.UserComments.GetAllAsync(User.GetUserId());
+            return Ok(items.Select(i => _mapper.Map(i)));
         }
 
         // GET: api/UserComment/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserComment>> GetUserComment(Guid id)
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<UserComment>> Get(Guid id)
         {
-          if (_context.UserComments == null)
-          {
-              return NotFound();
-          }
-            var userComment = await _context.UserComments.FindAsync(id);
-
-            if (userComment == null)
-            {
+            var item = await _bll.UserComments.FirstOrDefaultAsync(id, User.GetUserId());
+            if (item == null)
                 return NotFound();
-            }
 
-            return userComment;
-        }
+            var mapped = _mapper.Map(item);
+            if (mapped == null)
+                return NotFound();
 
-        // PUT: api/UserComment/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUserComment(Guid id, UserComment userComment)
-        {
-            if (id != userComment.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(userComment).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserCommentExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return mapped;
         }
 
         // POST: api/UserComment
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<UserComment>> PostUserComment(UserComment userComment)
+        public async Task<ActionResult<UserComment>> Post(UserComment item)
         {
-          if (_context.UserComments == null)
-          {
-              return Problem("Entity set 'AppDbContext.UserComments'  is null.");
-          }
-            _context.UserComments.Add(userComment);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            var addedItem = _bll.UserComments.Add(bllItem);
+            await _bll.SaveChangesAsync();
 
-            return CreatedAtAction("GetUserComment", new { id = userComment.Id }, userComment);
+            var returnItem = _mapper.Map(addedItem);
+            return CreatedAtAction(nameof(Get), new {id = returnItem!.Id}, item);
         }
 
-        // DELETE: api/UserComment/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUserComment(Guid id)
+        // PUT: api/UserComment/5
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Put(Guid id, UserComment item)
         {
-            if (_context.UserComments == null)
-            {
+            if (!await _bll.UserComments.ExistsAsync(id, User.GetUserId()))
                 return NotFound();
-            }
-            var userComment = await _context.UserComments.FindAsync(id);
-            if (userComment == null)
-            {
-                return NotFound();
-            }
 
-            _context.UserComments.Remove(userComment);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            _bll.UserComments.Update(bllItem, User.GetUserId());
+            await _bll.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool UserCommentExists(Guid id)
+        // DELETE: api/UserComment/5
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            return (_context.UserComments?.Any(e => e.Id == id)).GetValueOrDefault();
+            if (!await _bll.UserComments.ExistsAsync(id, User.GetUserId()))
+                return NotFound();
+
+            await _bll.UserComments.RemoveAsync(id, User.GetUserId());
+            await _bll.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

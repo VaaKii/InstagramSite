@@ -1,8 +1,10 @@
-﻿using App.DAL.DTO.Identity;
+﻿using App.Domain.Identity;
 using Base.Domain;
-namespace App.DAL.DTO;
 
-	public class UserStories: DomainEntityMetaId
+
+namespace App.Domain;
+
+	public class UserStory: DomainEntityMetaId
 	{
 	public Guid AppUserId { get; set; }
 	public AppUser? AppUser { get; set; }

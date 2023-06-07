@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Base.Domain;
 using App.Public.DTO.v1.Identity;
 

@@ -6,7 +6,7 @@ using Base.Contracts.Base;
 
 namespace App.BLL.Services;
 
-public class UserLikeService : BaseEntityService<App.BLL.DTO.UserLike, App.DAL.DTO.UserLike, IUserLikeRepository>,
+public class UserLikeService : BaseEntityService<UserLike, App.DAL.DTO.UserLike, IUserLikeRepository>,
     IUserLikeService
 {
     public UserLikeService(IUserLikeRepository repository, IMapper<UserLike, DAL.DTO.UserLike> mapper) : base(repository, mapper)

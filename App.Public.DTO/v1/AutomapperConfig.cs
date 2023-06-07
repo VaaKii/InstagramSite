@@ -14,7 +14,7 @@ public class AutomapperConfig : Profile
         CreateMap<App.Public.DTO.v1.UserComment, App.BLL.DTO.UserComment>().ReverseMap();
         CreateMap<App.Public.DTO.v1.UserPost, App.BLL.DTO.UserPost>().ReverseMap();
         CreateMap<App.Public.DTO.v1.UserLike, App.BLL.DTO.UserLike>().ReverseMap();
-        CreateMap<App.Public.DTO.v1.UserStories, App.BLL.DTO.UserStories>().ReverseMap();
+        CreateMap<App.Public.DTO.v1.UserStory, App.BLL.DTO.UserStory>().ReverseMap();
         CreateMap<App.Public.DTO.v1.Identity.AppUser, App.BLL.DTO.Identity.AppUser>().ReverseMap();
     }
 }
