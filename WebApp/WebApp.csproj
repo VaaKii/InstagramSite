@@ -50,6 +50,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="ApiControllers\Identity\" />
       <Folder Include="Areas\Identity\Pages\Account\" />
       <Folder Include="Controllers\" />
     </ItemGroup>

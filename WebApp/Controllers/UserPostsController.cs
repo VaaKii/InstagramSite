@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using App.DAL.EF;
 using App.Domain;
+using Base.Extensions;
 
 namespace WebApp.Controllers
 {
@@ -44,6 +45,13 @@ namespace WebApp.Controllers
             }
 
             return View(userPost);
+        }
+        
+        public IActionResult CreatePost()
+        {
+            ViewData["AppUserId"] = User.GetUserId();
+            ViewData["TopicId"] = new SelectList(_context.Topics, "Id", "Id");
+            return View();
         }
 
         // GET: UserPosts/Create
