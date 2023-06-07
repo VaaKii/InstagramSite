@@ -1,125 +1,89 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using App.Contracts.BLL;
+using AutoMapper;
+using Base.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
-using App.Domain;
 
 namespace WebApp.ApiControllers
 {
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    public class UserStoriesController : ControllerBase
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public class UserStoryController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _bll;
+        private readonly UserStoryMapper _mapper;
 
-        public UserStoriesController(AppDbContext context)
+        public UserStoryController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new UserStoryMapper(mapper);
         }
 
-        // GET: api/UserStories
+        // GET: api/UserStory
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserStories>>> GetUserStories()
+        public async Task<ActionResult<IEnumerable<UserStory>>> GetAll()
         {
-          if (_context.UserStories == null)
-          {
-              return NotFound();
-          }
-            return await _context.UserStories.ToListAsync();
+            var items = await _bll.UserStories.GetAllAsync(User.GetUserId());
+            return Ok(items.Select(i => _mapper.Map(i)));
         }
 
-        // GET: api/UserStories/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserStories>> GetUserStories(Guid id)
+        // GET: api/UserStory/5
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<UserStory>> Get(Guid id)
         {
-          if (_context.UserStories == null)
-          {
-              return NotFound();
-          }
-            var userStories = await _context.UserStories.FindAsync(id);
-
-            if (userStories == null)
-            {
+            var item = await _bll.UserStories.FirstOrDefaultAsync(id, User.GetUserId());
+            if (item == null)
                 return NotFound();
-            }
 
-            return userStories;
+            var mapped = _mapper.Map(item);
+            if (mapped == null)
+                return NotFound();
+
+            return mapped;
         }
 
-        // PUT: api/UserStories/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUserStories(Guid id, UserStories userStories)
-        {
-            if (id != userStories.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(userStories).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserStoriesExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/UserStories
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // POST: api/UserStory
         [HttpPost]
-        public async Task<ActionResult<UserStories>> PostUserStories(UserStories userStories)
+        public async Task<ActionResult<UserStory>> Post(UserStory item)
         {
-          if (_context.UserStories == null)
-          {
-              return Problem("Entity set 'AppDbContext.UserStories'  is null.");
-          }
-            _context.UserStories.Add(userStories);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            var addedItem = _bll.UserStories.Add(bllItem);
+            await _bll.SaveChangesAsync();
 
-            return CreatedAtAction("GetUserStories", new { id = userStories.Id }, userStories);
+            var returnItem = _mapper.Map(addedItem);
+            return CreatedAtAction(nameof(Get), new {id = returnItem!.Id}, item);
         }
 
-        // DELETE: api/UserStories/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUserStories(Guid id)
+        // PUT: api/UserStory/5
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Put(Guid id, UserStory item)
         {
-            if (_context.UserStories == null)
-            {
+            if (!await _bll.UserStories.ExistsAsync(id, User.GetUserId()))
                 return NotFound();
-            }
-            var userStories = await _context.UserStories.FindAsync(id);
-            if (userStories == null)
-            {
-                return NotFound();
-            }
 
-            _context.UserStories.Remove(userStories);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            _bll.UserStories.Update(bllItem, User.GetUserId());
+            await _bll.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool UserStoriesExists(Guid id)
+        // DELETE: api/UserStory/5
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            return (_context.UserStories?.Any(e => e.Id == id)).GetValueOrDefault();
+            if (!await _bll.UserStories.ExistsAsync(id, User.GetUserId()))
+                return NotFound();
+
+            await _bll.UserStories.RemoveAsync(id, User.GetUserId());
+            await _bll.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

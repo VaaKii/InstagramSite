@@ -38,60 +38,60 @@ public class BaseEntityService<TBllEntity, TDalEntity, TRepository, TKey> : IEnt
         return Mapper.Map(Repository.Add(Mapper.Map(entity)!))!;
     }
 
-    public TBllEntity Update(TBllEntity entity)
+    public TBllEntity Update(TBllEntity entity, TKey? userId = default)
     {
-        return Mapper.Map(Repository.Update(Mapper.Map(entity)!))!;
+        return Mapper.Map(Repository.Update(Mapper.Map(entity)!, userId))!;
     }
 
-    public TBllEntity Remove(TBllEntity entity)
+    public TBllEntity Remove(TBllEntity entity, TKey? userId = default)
     {
-        return Mapper.Map(Repository.Remove(Mapper.Map(entity)!))!;
+        return Mapper.Map(Repository.Remove(Mapper.Map(entity)!, userId))!;
     }
 
-    public TBllEntity Remove(TKey id)
+    public TBllEntity Remove(TKey id, TKey? userId = default)
     {
-        return Mapper.Map(Repository.Remove(id))!;
+        return Mapper.Map(Repository.Remove(id, userId))!;
     }
 
-    public TBllEntity? FirstOrDefault(TKey id, bool noTracking = true)
+    public TBllEntity? FirstOrDefault(TKey id, TKey? userId = default, bool noTracking = true)
     {
-        return Mapper.Map(Repository.FirstOrDefault(id, noTracking))!;
+        return Mapper.Map(Repository.FirstOrDefault(id, userId, noTracking))!;
     }
 
-    public IEnumerable<TBllEntity> GetAll(bool noTracking = true)
+    public IEnumerable<TBllEntity> GetAll(TKey? userId = default, bool noTracking = true)
     {
-        return Repository.GetAll(noTracking).Select(x => Mapper.Map(x)!);
+        return Repository.GetAll(userId, noTracking).Select(x => Mapper.Map(x)!);
     }
 
-    public bool Exists(TKey id)
+    public bool Exists(TKey id, TKey? userId = default)
     {
-        return Repository.Exists(id);
+        return Repository.Exists(id, userId);
     }
     
     // TODO IF NEEDED
-    public EntityEntry<TBllEntity> Entry(TBllEntity entity)
+    public EntityEntry<TBllEntity> Entry(TBllEntity entity, TKey? userId = default)
     {
         throw new NotImplementedException();
     }
 
 
-    public async Task<TBllEntity?> FirstOrDefaultAsync(TKey id, bool noTracking = true)
+    public async Task<TBllEntity?> FirstOrDefaultAsync(TKey id, TKey? userId = default, bool noTracking = true)
     {
-        return Mapper.Map(await Repository.FirstOrDefaultAsync(id, noTracking));
+        return Mapper.Map(await Repository.FirstOrDefaultAsync(id, userId, noTracking));
     }
 
-    public async Task<IEnumerable<TBllEntity>> GetAllAsync(bool noTracking = true)
+    public async Task<IEnumerable<TBllEntity>> GetAllAsync(TKey? userId = default, bool noTracking = true)
     {
-        return (await Repository.GetAllAsync(noTracking)).Select(x => Mapper.Map(x)!);
+        return (await Repository.GetAllAsync(userId, noTracking)).Select(x => Mapper.Map(x)!);
     }
 
-    public Task<bool> ExistsAsync(TKey id)
+    public Task<bool> ExistsAsync(TKey id, TKey? userId = default)
     {
-        return Repository.ExistsAsync(id);
+        return Repository.ExistsAsync(id, userId);
     }
 
-    public async Task<TBllEntity> RemoveAsync(TKey id)
+    public async Task<TBllEntity> RemoveAsync(TKey id, TKey? userId = default)
     {
-        return Mapper.Map(await Repository.RemoveAsync(id))!;
+        return Mapper.Map(await Repository.RemoveAsync(id, userId))!;
     }
 }

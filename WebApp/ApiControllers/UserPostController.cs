@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
-using App.Domain;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using App.Contracts.BLL;
+using AutoMapper;
+using Base.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,117 +12,78 @@ namespace WebApp.ApiControllers
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    public class UserPostController : ControllerBase
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public class UserPostsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _bll;
+        private readonly UserPostMapper _mapper;
 
-        public UserPostController(AppDbContext context)
+        public UserPostsController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new UserPostMapper(mapper);
         }
 
-        // GET: api/UserPost
+        // GET: api/Liked
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserPost>>> GetUserPosts()
+        public async Task<ActionResult<IEnumerable<UserPost>>> GetAll()
         {
-          if (_context.UserPosts == null)
-          {
-              return NotFound();
-          }
-            return await _context.UserPosts.ToListAsync();
+            var items = await _bll.UserPosts.GetAllAsync(User.GetUserId());
+            return Ok(items.Select(i => _mapper.Map(i)));
         }
 
-        // GET: api/UserPost/5
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserPost>> GetUserPost(Guid id)
+        // GET: api/Liked/5
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<UserPost>> Get(Guid id)
         {
-          if (_context.UserPosts == null)
-          {
-              return NotFound();
-          }
-            var userPost = await _context.UserPosts.FindAsync(id);
-
-            if (userPost == null)
-            {
+            var item = await _bll.UserPosts.FirstOrDefaultAsync(id, User.GetUserId());
+            if (item == null)
                 return NotFound();
-            }
 
-            return userPost;
+            var mapped = _mapper.Map(item);
+            if (mapped == null)
+                return NotFound();
+
+            return mapped;
         }
 
-        // PUT: api/UserPost/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [Authorize(Roles = "admin, user", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUserPost(Guid id, UserPost userPost)
-        {
-            if (id != userPost.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(userPost).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserPostExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/UserPost
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // POST: api/Liked
         [HttpPost]
-        [Authorize(Roles = "admin, user", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<ActionResult<UserPost>> PostUserPost(UserPost userPost)
+        public async Task<ActionResult<UserPost>> Post(UserPost item)
         {
-          if (_context.UserPosts == null)
-          {
-              return Problem("Entity set 'AppDbContext.UserPosts'  is null.");
-          }
-            _context.UserPosts.Add(userPost);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            var addedItem = _bll.UserPosts.Add(bllItem);
+            await _bll.SaveChangesAsync();
 
-            return CreatedAtAction("GetUserPost", new { id = userPost.Id }, userPost);
+            var returnItem = _mapper.Map(addedItem);
+            return CreatedAtAction(nameof(Get), new {id = returnItem!.Id}, item);
         }
 
-        // DELETE: api/UserPost/5
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "admin, user", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> DeleteUserPost(Guid id)
+        // PUT: api/Liked/5
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Put(Guid id, UserPost item)
         {
-            if (_context.UserPosts == null)
-            {
+            if (!await _bll.UserPosts.ExistsAsync(id, User.GetUserId()))
                 return NotFound();
-            }
-            var userPost = await _context.UserPosts.FindAsync(id);
-            if (userPost == null)
-            {
-                return NotFound();
-            }
 
-            _context.UserPosts.Remove(userPost);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            _bll.UserPosts.Update(bllItem, User.GetUserId());
+            await _bll.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool UserPostExists(Guid id)
+        // DELETE: api/Liked/5
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            return (_context.UserPosts?.Any(e => e.Id == id)).GetValueOrDefault();
+            if (!await _bll.UserPosts.ExistsAsync(id, User.GetUserId()))
+                return NotFound();
+
+            await _bll.UserPosts.RemoveAsync(id, User.GetUserId());
+            await _bll.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

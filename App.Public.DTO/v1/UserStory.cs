@@ -3,7 +3,7 @@ using Base.Domain;
 
 namespace App.Public.DTO.v1;
 
-public class UserStories: DomainEntityId
+public class UserStory: DomainEntityId
 {
     public Guid AppUserId { get; set; }
     public AppUser? AppUser { get; set; }

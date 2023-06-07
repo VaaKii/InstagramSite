@@ -1,20 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
 using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class TopicsController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _context;
 
-        public TopicsController(AppDbContext context)
+        public TopicsController(IAppBll context)
         {
             _context = context;
         }
@@ -24,7 +18,7 @@ namespace WebApp.Controllers
         {
               return _context.Topics != null ? 
                           View(await _context.Topics.ToListAsync()) :
-                          Problem("Entity set 'AppDbContext.Topics'  is null.");
+                          Problem("Entity set 'IAppBll.Topics'  is null.");
         }
 
         // GET: Topics/Details/5
@@ -144,7 +138,7 @@ namespace WebApp.Controllers
         {
             if (_context.Topics == null)
             {
-                return Problem("Entity set 'AppDbContext.Topics'  is null.");
+                return Problem("Entity set 'IAppBll.Topics'  is null.");
             }
             var topic = await _context.Topics.FindAsync(id);
             if (topic != null)

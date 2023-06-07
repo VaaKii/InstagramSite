@@ -1,15 +1,17 @@
 ﻿
 using App.BLL.DTO.Identity;
+using Base.Contracts.Domain;
 using Base.Domain;
 
 namespace App.BLL.DTO;
 
-	public class DirectMessage: DomainEntityMetaId
+	public class DirectMessage: DomainEntityMetaId, IDomainAppUser<Guid, AppUser>
 	{
-	public Guid AppUserId { get; set; }
-	public AppUser? AppUser { get; set; }
+	public Guid AuthorId { get; set; }
+	public AppUser? Author { get; set; }
 	public string? Message { get; set; }
 	
-	public Guid SenderId { get; set; }
+	public Guid ReceiverId { get; set; }
+	public AppUser? Receiver { get; set; }
 	}
 

@@ -1,20 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
 using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class UserLikesController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _context;
 
-        public UserLikesController(AppDbContext context)
+        public UserLikesController(IAppBll context)
         {
             _context = context;
         }
@@ -49,8 +44,8 @@ namespace WebApp.Controllers
         // GET: UserLikes/Create
         public IActionResult Create()
         {
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
-            ViewData["UserPostId"] = new SelectList(_context.UserPosts, "Id", "Text");
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
+            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text");
             return View();
         }
 
@@ -59,7 +54,7 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("UserPostId,AppUserId,CreatedAt,Id")] UserLike userLike)
+        public async Task<IActionResult> Create([Bind("LikedId,AuthorId,CreatedAt,Id")] UserLike userLike)
         {
             if (ModelState.IsValid)
             {
@@ -68,8 +63,8 @@ namespace WebApp.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userLike.AppUserId);
-            ViewData["UserPostId"] = new SelectList(_context.UserPosts, "Id", "Text", userLike.UserPostId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userLike.AppUserId);
+            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userLike.UserPostId);
             return View(userLike);
         }
 
@@ -86,8 +81,8 @@ namespace WebApp.Controllers
             {
                 return NotFound();
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userLike.AppUserId);
-            ViewData["UserPostId"] = new SelectList(_context.UserPosts, "Id", "Text", userLike.UserPostId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userLike.AppUserId);
+            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userLike.UserPostId);
             return View(userLike);
         }
 
@@ -96,7 +91,7 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("UserPostId,AppUserId,CreatedAt,Id")] UserLike userLike)
+        public async Task<IActionResult> Edit(Guid id, [Bind("LikedId,AuthorId,CreatedAt,Id")] UserLike userLike)
         {
             if (id != userLike.Id)
             {
@@ -123,8 +118,8 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userLike.AppUserId);
-            ViewData["UserPostId"] = new SelectList(_context.UserPosts, "Id", "Text", userLike.UserPostId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userLike.AppUserId);
+            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userLike.UserPostId);
             return View(userLike);
         }
 
@@ -155,7 +150,7 @@ namespace WebApp.Controllers
         {
             if (_context.UserLikes == null)
             {
-                return Problem("Entity set 'AppDbContext.UserLikes'  is null.");
+                return Problem("Entity set 'IAppBll.UserLikes'  is null.");
             }
             var userLike = await _context.UserLikes.FindAsync(id);
             if (userLike != null)

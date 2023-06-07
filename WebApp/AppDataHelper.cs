@@ -1,8 +1,10 @@
 using System.Security.Claims;
+using App.Contracts.BLL;
 using App.DAL.EF;
 using App.Domain.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using AppRole = App.DAL.DTO.Identity.AppRole;
 
 namespace WebApp;
 
@@ -75,7 +77,7 @@ public class AppDataHelper
             var users = new (string username,string firstName,string lastName, string password, string roles)[]
             {
                 ("admin@itcollege.ee","Admin", "College", "123456", "user, admin"),
-                ("user@itcollege.ee","Ahmed", "Abdullajev", "123456", "user"),
+                ("user@itcollege.ee","User", "Example", "123456", "user"),
                 ("newuser@itcollege.ee", "User", "College", "123456", "")
             };
 

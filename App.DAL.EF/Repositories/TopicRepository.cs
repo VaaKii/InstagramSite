@@ -6,14 +6,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace App.DAL.EF.Repositories;
 
-public class TopicRepository: BaseEntityRepository<App.DAL.DTO.Topic, App.Domain.Topic, AppDbContext>, ITopicRepository
+public class TopicRepository: BaseEntityRepository<Topic, App.Domain.Topic, AppDbContext>, ITopicRepository
 {
-    public TopicRepository(AppDbContext dbContext, IMapper<App.DAL.DTO.Topic,App.Domain.Topic> mapper) 
+    public TopicRepository(AppDbContext dbContext, IMapper<Topic,App.Domain.Topic> mapper) 
         : base(dbContext, mapper)
     {
     }
 
-    public override Topic Update(Topic entity)
+    public override Topic Update(Topic entity, Guid userId = default)
     {
         var realEntity = RepoDbSet.FindAsync(entity.Id).Result;
 
@@ -23,15 +23,15 @@ public class TopicRepository: BaseEntityRepository<App.DAL.DTO.Topic, App.Domain
         return Mapper.Map(RepoDbSet.Update(realEntity).Entity)!;
     }
 
-    public override async Task<IEnumerable<Topic>> GetAllAsync(bool noTracking = true)
+    public override async Task<IEnumerable<Topic>> GetAllAsync(Guid userId = default, bool noTracking = true)
     {
-        var query = CreateQuery(noTracking);
+        var query = CreateQuery(userId, noTracking);
 
         return (await query.Include(s => s.UserPosts).ToListAsync()).Select(x => Mapper.Map(x)!);
     }
-    public override async Task<Topic?> FirstOrDefaultAsync(Guid id, bool noTracking = true)
+    public override async Task<Topic?> FirstOrDefaultAsync(Guid id, Guid userId = default, bool noTracking = true)
     {
-        var query = CreateQuery(noTracking);
+        var query = CreateQuery(userId, noTracking);
         query = query.Include(q => q.UserPosts);
         return  Mapper.Map(await query.FirstOrDefaultAsync(m => m.Id.Equals(id)));
     }

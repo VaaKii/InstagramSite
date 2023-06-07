@@ -1,20 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
 using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class FollowsController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _context;
 
-        public FollowsController(AppDbContext context)
+        public FollowsController(IAppBll context)
         {
             _context = context;
         }
@@ -48,7 +43,7 @@ namespace WebApp.Controllers
         // GET: Follows/Create
         public IActionResult Create()
         {
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
             return View();
         }
 
@@ -57,7 +52,7 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AppUserId,CreatedAt,Id")] Follow follow)
+        public async Task<IActionResult> Create([Bind("AuthorId,CreatedAt,Id")] Follow follow)
         {
             if (ModelState.IsValid)
             {
@@ -66,7 +61,7 @@ namespace WebApp.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", follow.AppUserId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", follow.AppUserId);
             return View(follow);
         }
 
@@ -83,7 +78,7 @@ namespace WebApp.Controllers
             {
                 return NotFound();
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", follow.AppUserId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", follow.AppUserId);
             return View(follow);
         }
 
@@ -92,7 +87,7 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("AppUserId,CreatedAt,Id")] Follow follow)
+        public async Task<IActionResult> Edit(Guid id, [Bind("AuthorId,CreatedAt,Id")] Follow follow)
         {
             if (id != follow.Id)
             {
@@ -119,7 +114,7 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", follow.AppUserId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", follow.AppUserId);
             return View(follow);
         }
 
@@ -149,7 +144,7 @@ namespace WebApp.Controllers
         {
             if (_context.Follows == null)
             {
-                return Problem("Entity set 'AppDbContext.Follows'  is null.");
+                return Problem("Entity set 'IAppBll.Follows'  is null.");
             }
             var follow = await _context.Follows.FindAsync(id);
             if (follow != null)

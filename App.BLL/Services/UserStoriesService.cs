@@ -6,14 +6,14 @@ using Base.Contracts.Base;
 
 namespace App.BLL.Services;
 
-public class UserStoriesService : BaseEntityService<App.BLL.DTO.UserStories, App.DAL.DTO.UserStories, IUserStoriesRepository>,
+public class UserStoriesService : BaseEntityService<UserStory, App.DAL.DTO.UserStory, IUserStoriesRepository>,
 	IUserStoriesService
 {
-	public UserStoriesService(IUserStoriesRepository repository, IMapper<UserStories, DAL.DTO.UserStories> mapper) : base(repository, mapper)
+	public UserStoriesService(IUserStoriesRepository repository, IMapper<UserStory, DAL.DTO.UserStory> mapper) : base(repository, mapper)
 	{
 	}
 
-	public UserStories AddWithUser(UserStories entity, Guid userId)
+	public UserStory AddWithUser(UserStory entity, Guid userId)
 	{
 		return Mapper.Map(Repository.AddWithUser(Mapper.Map(entity)!, userId))!;
 	}

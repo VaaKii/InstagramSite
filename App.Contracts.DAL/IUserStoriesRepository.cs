@@ -3,7 +3,7 @@ using Base.Contracts.DAL;
 
 namespace App.Contracts.DAL;
 
-public interface IUserStoriesRepository : IEntityRepository<App.DAL.DTO.UserStories>, IUserStoriesRepositoryCustom<UserStories>
+public interface IUserStoriesRepository : IEntityRepository<App.DAL.DTO.UserStory>, IUserStoriesRepositoryCustom<UserStory>
 {
 }
 

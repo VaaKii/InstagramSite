@@ -1,21 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using App.Public.DTO.v1;
-using App.Public.DTO.v1.Identity;
-using App.Public.DTO.v1.Testing;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
-using AppUser = App.Domain.Identity.AppUser;
 
 namespace Testing.WebApp;
 
@@ -40,7 +27,6 @@ public class IntegrationTestPostApiController : IClassFixture<CustomWebApplicati
                 }
             );
     }
-    
     
     [Fact]
     public async void Test_Get_Register_Returns_Method_Not_Allowed()

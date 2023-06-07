@@ -5,16 +5,18 @@ using Base.DAL.EF;
 
 namespace App.DAL.EF.Repositories;
 
-public class UserStoriesRepository : BaseEntityRepository<App.DAL.DTO.UserStories, App.Domain.UserStories, AppDbContext>, IUserStoriesRepository
+public class UserStoriesRepository : BaseEntityRepository<UserStory, App.Domain.UserStory, AppDbContext>,
+  IUserStoriesRepository
 {
-	public UserStoriesRepository(AppDbContext dbContext, IMapper<App.DAL.DTO.UserStories, App.Domain.UserStories> mapper)
-		: base(dbContext, mapper)
-	{
-	}
-	public UserStories AddWithUser(UserStories entity, Guid userId)
-	{
-		entity.AppUserId = userId;
+  public UserStoriesRepository(AppDbContext dbContext, IMapper<UserStory, App.Domain.UserStory> mapper)
+    : base(dbContext, mapper)
+  {
+  }
 
-		return Mapper.Map(RepoDbSet.Add(Mapper.Map(entity)!).Entity)!;
-	}
+  public UserStory AddWithUser(UserStory entity, Guid userId)
+  {
+    entity.AuthorId = userId;
+
+    return Mapper.Map(RepoDbSet.Add(Mapper.Map(entity)!).Entity)!;
+  }
 }

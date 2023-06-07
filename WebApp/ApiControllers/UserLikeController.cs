@@ -1,125 +1,89 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using App.Contracts.BLL;
+using AutoMapper;
+using Base.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
-using App.Domain;
 
 namespace WebApp.ApiControllers
 {
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    public class UserLikeController : ControllerBase
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public class UserLikesController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _bll;
+        private readonly UserLikeMapper _mapper;
 
-        public UserLikeController(AppDbContext context)
+        public UserLikesController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new UserLikeMapper(mapper);
         }
 
         // GET: api/UserLike
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserLike>>> GetUserLikes()
+        public async Task<ActionResult<IEnumerable<UserLike>>> GetAll()
         {
-          if (_context.UserLikes == null)
-          {
-              return NotFound();
-          }
-            return await _context.UserLikes.ToListAsync();
+            var items = await _bll.UserLikes.GetAllAsync(User.GetUserId());
+            return Ok(items.Select(i => _mapper.Map(i)));
         }
 
         // GET: api/UserLike/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserLike>> GetUserLike(Guid id)
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<UserLike>> Get(Guid id)
         {
-          if (_context.UserLikes == null)
-          {
-              return NotFound();
-          }
-            var userLike = await _context.UserLikes.FindAsync(id);
-
-            if (userLike == null)
-            {
+            var item = await _bll.UserLikes.FirstOrDefaultAsync(id, User.GetUserId());
+            if (item == null)
                 return NotFound();
-            }
 
-            return userLike;
-        }
+            var mapped = _mapper.Map(item);
+            if (mapped == null)
+                return NotFound();
 
-        // PUT: api/UserLike/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUserLike(Guid id, UserLike userLike)
-        {
-            if (id != userLike.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(userLike).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserLikeExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return mapped;
         }
 
         // POST: api/UserLike
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<UserLike>> PostUserLike(UserLike userLike)
+        public async Task<ActionResult<UserLike>> Post(UserLike item)
         {
-          if (_context.UserLikes == null)
-          {
-              return Problem("Entity set 'AppDbContext.UserLikes'  is null.");
-          }
-            _context.UserLikes.Add(userLike);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            var addedItem = _bll.UserLikes.Add(bllItem);
+            await _bll.SaveChangesAsync();
 
-            return CreatedAtAction("GetUserLike", new { id = userLike.Id }, userLike);
+            var returnItem = _mapper.Map(addedItem);
+            return CreatedAtAction(nameof(Get), new {id = returnItem!.Id}, item);
         }
 
-        // DELETE: api/UserLike/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUserLike(Guid id)
+        // PUT: api/UserLike/5
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Put(Guid id, UserLike item)
         {
-            if (_context.UserLikes == null)
-            {
+            if (!await _bll.UserLikes.ExistsAsync(id, User.GetUserId()))
                 return NotFound();
-            }
-            var userLike = await _context.UserLikes.FindAsync(id);
-            if (userLike == null)
-            {
-                return NotFound();
-            }
 
-            _context.UserLikes.Remove(userLike);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            _bll.UserLikes.Update(bllItem, User.GetUserId());
+            await _bll.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool UserLikeExists(Guid id)
+        // DELETE: api/UserLike/5
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            return (_context.UserLikes?.Any(e => e.Id == id)).GetValueOrDefault();
+            if (!await _bll.UserLikes.ExistsAsync(id, User.GetUserId()))
+                return NotFound();
+
+            await _bll.UserLikes.RemoveAsync(id, User.GetUserId());
+            await _bll.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

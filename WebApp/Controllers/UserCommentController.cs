@@ -1,20 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
 using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class UserCommentController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _context;
 
-        public UserCommentController(AppDbContext context)
+        public UserCommentController(IAppBll context)
         {
             _context = context;
         }
@@ -49,8 +44,8 @@ namespace WebApp.Controllers
         // GET: UserComment/Create
         public IActionResult Create()
         {
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
-            ViewData["UserPostId"] = new SelectList(_context.UserPosts, "Id", "Text");
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
+            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text");
             return View();
         }
 
@@ -59,7 +54,7 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CommentText,UserPostId,AppUserId,CreatedAt,Id")] UserComment userComment)
+        public async Task<IActionResult> Create([Bind("CommentText,LikedId,AuthorId,CreatedAt,Id")] UserComment userComment)
         {
             if (ModelState.IsValid)
             {
@@ -68,8 +63,8 @@ namespace WebApp.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userComment.AppUserId);
-            ViewData["UserPostId"] = new SelectList(_context.UserPosts, "Id", "Text", userComment.UserPostId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userComment.AppUserId);
+            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userComment.UserPostId);
             return View(userComment);
         }
 
@@ -86,8 +81,8 @@ namespace WebApp.Controllers
             {
                 return NotFound();
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userComment.AppUserId);
-            ViewData["UserPostId"] = new SelectList(_context.UserPosts, "Id", "Text", userComment.UserPostId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userComment.AppUserId);
+            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userComment.UserPostId);
             return View(userComment);
         }
 
@@ -96,7 +91,7 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("CommentText,UserPostId,AppUserId,CreatedAt,Id")] UserComment userComment)
+        public async Task<IActionResult> Edit(Guid id, [Bind("CommentText,LikedId,AuthorId,CreatedAt,Id")] UserComment userComment)
         {
             if (id != userComment.Id)
             {
@@ -123,8 +118,8 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userComment.AppUserId);
-            ViewData["UserPostId"] = new SelectList(_context.UserPosts, "Id", "Text", userComment.UserPostId);
+            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userComment.AppUserId);
+            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userComment.UserPostId);
             return View(userComment);
         }
 
@@ -155,7 +150,7 @@ namespace WebApp.Controllers
         {
             if (_context.UserComments == null)
             {
-                return Problem("Entity set 'AppDbContext.UserComments'  is null.");
+                return Problem("Entity set 'IAppBll.UserComments'  is null.");
             }
             var userComment = await _context.UserComments.FindAsync(id);
             if (userComment != null)

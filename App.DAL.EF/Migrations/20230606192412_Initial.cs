@@ -248,7 +248,7 @@ namespace App.DAL.EF.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserStories",
+                name: "UserStory",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -413,22 +413,22 @@ namespace App.DAL.EF.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_DirectMessages_AppUserId",
                 table: "DirectMessages",
-                column: "AppUserId");
+                column: "AuthorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Follows_AppUserId",
                 table: "Follows",
-                column: "AppUserId");
+                column: "AuthorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_AppUserId",
                 table: "RefreshTokens",
-                column: "AppUserId");
+                column: "AuthorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserComments_AppUserId",
                 table: "UserComments",
-                column: "AppUserId");
+                column: "AuthorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserComments_UserPostId",
@@ -443,7 +443,7 @@ namespace App.DAL.EF.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_UserLikes_AppUserId",
                 table: "UserLikes",
-                column: "AppUserId");
+                column: "AuthorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserLikes_UserPostId",
@@ -453,7 +453,7 @@ namespace App.DAL.EF.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_UserPosts_AppUserId",
                 table: "UserPosts",
-                column: "AppUserId");
+                column: "AuthorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserPosts_TopicId",
@@ -462,8 +462,8 @@ namespace App.DAL.EF.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserStories_AppUserId",
-                table: "UserStories",
-                column: "AppUserId");
+                table: "UserStory",
+                column: "AuthorId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -502,7 +502,7 @@ namespace App.DAL.EF.Migrations
                 name: "UserLikes");
 
             migrationBuilder.DropTable(
-                name: "UserStories");
+                name: "UserStory");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

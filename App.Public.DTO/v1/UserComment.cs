@@ -8,7 +8,7 @@ public class UserComment : DomainEntityId
     public string CommentText { get; set; } = default!;
 
     public Guid UserPostId { get; set; }
-    // public UserPost? UserPost { get; set; }
+    // public Liked? Liked { get; set; }
     
     public Guid AppUserId { get; set; }
     public AppUser? AppUser { get; set; }

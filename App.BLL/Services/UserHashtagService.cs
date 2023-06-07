@@ -6,7 +6,7 @@ using Base.Contracts.Base;
 
 namespace App.BLL.Services;
 
-public class UserHashtagService : BaseEntityService<App.BLL.DTO.UserHashtag, App.DAL.DTO.UserHashtag, IUserHashtagRepository>,
+public class UserHashtagService : BaseEntityService<UserHashtag, App.DAL.DTO.UserHashtag, IUserHashtagRepository>,
     IUserHashtagService
 {
     public UserHashtagService(IUserHashtagRepository repository, IMapper<UserHashtag, DAL.DTO.UserHashtag> mapper) : base(repository, mapper)
