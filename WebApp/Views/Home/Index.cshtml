@@ -1,10 +1,11 @@
 ﻿@model WebApp.ViewModels.UserPostViewModel
-
+@using Microsoft.AspNetCore.Identity
+@using App.Domain.Identity
+@inject SignInManager<AppUser> SignInManager
 @{
     ViewBag.Title = "Posts";
     Layout = "_Layout";
 }
-
 
 @foreach (var post in Model.Posts)
 {

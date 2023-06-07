@@ -1,95 +1,99 @@
+using App.Contracts.BLL;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using AutoMapper;
+using Base.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class UserStoriesController : Controller
     {
-        private readonly IAppBll _context;
+        private readonly IAppBll _bll;
+        private readonly UserStoryMapper _mapper;
 
-        public UserStoriesController(IAppBll context)
+        public UserStoriesController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new UserStoryMapper(mapper);
         }
 
-        // GET: UserStory
+        // GET: UserStories
         public async Task<IActionResult> Index()
         {
-            var appDbContext = _context.UserStories.Include(u => u.AppUser);
-            return View(await appDbContext.ToListAsync());
+            var items = _bll.UserStories.GetAll(User.GetUserId());
+            return View(_mapper.Map(items));
         }
 
-        // GET: UserStory/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+        // GET: UserStories/Details/5
+        public async Task<IActionResult> Details(Guid id)
         {
-            if (id == null || _context.UserStories == null)
+            if (id == null || _bll.UserStories == null)
             {
                 return NotFound();
             }
 
-            var userStories = await _context.UserStories
-                .Include(u => u.AppUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (userStories == null)
+            var UserStory = await _bll.UserStories.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserStory == null)
             {
                 return NotFound();
             }
 
-            return View(userStories);
+            return View(_mapper.Map(UserStory));
         }
 
-        // GET: UserStory/Create
+        // GET: UserStories/Create
         public IActionResult Create()
         {
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname");
             return View();
         }
 
-        // POST: UserStory/Create
+        // POST: UserStories/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AuthorId,UrlPhoto,CreatedAt,Id")] UserStory userStory)
+        public async Task<IActionResult> Create([Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] UserStory UserStory)
         {
             if (ModelState.IsValid)
             {
-                userStory.Id = Guid.NewGuid();
-                _context.Add(userStory);
-                await _context.SaveChangesAsync();
+                UserStory.Id = Guid.NewGuid();
+                _bll.UserStories.Add(_mapper.Map(UserStory));
+                await _bll.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userStory.AppUserId);
-            return View(userStory);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserStory.AuthorId);
+            return View(UserStory);
         }
 
-        // GET: UserStory/Edit/5
-        public async Task<IActionResult> Edit(Guid? id)
+        // GET: UserStories/Edit/5
+        public async Task<IActionResult> Edit(Guid id)
         {
-            if (id == null || _context.UserStories == null)
+            if (id == null || _bll.UserStories == null)
             {
                 return NotFound();
             }
 
-            var userStories = await _context.UserStories.FindAsync(id);
-            if (userStories == null)
+            var UserStory = await _bll.UserStories.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserStory == null)
             {
                 return NotFound();
             }
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userStories.AppUserId);
-            return View(userStories);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserStory.AuthorId);
+            return View(_mapper.Map(UserStory));
         }
 
-        // POST: UserStory/Edit/5
+        // POST: UserStories/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("AuthorId,UrlPhoto,CreatedAt,Id")] UserStory userStory)
+        public async Task<IActionResult> Edit(Guid id, [Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] UserStory UserStory)
         {
-            if (id != userStory.Id)
+            if (id != UserStory.Id)
             {
                 return NotFound();
             }
@@ -98,12 +102,12 @@ namespace WebApp.Controllers
             {
                 try
                 {
-                    _context.Update(userStory);
-                    await _context.SaveChangesAsync();
+                    _bll.UserStories.Update(_mapper.Map(UserStory));
+                    await _bll.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UserStoriesExists(userStory.Id))
+                    if (!UserStoryExists(UserStory.Id))
                     {
                         return NotFound();
                     }
@@ -114,51 +118,50 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userStory.AppUserId);
-            return View(userStory);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserStory.AuthorId);
+            return View(UserStory);
         }
 
-        // GET: UserStory/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
+        // GET: UserStories/Delete/5
+        public async Task<IActionResult> Delete(Guid id)
         {
-            if (id == null || _context.UserStories == null)
+            if (id == null || _bll.UserStories == null)
             {
                 return NotFound();
             }
 
-            var userStories = await _context.UserStories
-                .Include(u => u.AppUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (userStories == null)
+            var UserStory = await _bll.UserStories
+                .FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserStory == null)
             {
                 return NotFound();
             }
 
-            return View(userStories);
+            return View(_mapper.Map(UserStory));
         }
 
-        // POST: UserStory/Delete/5
+        // POST: UserStories/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            if (_context.UserStories == null)
+            if (_bll.UserStories == null)
             {
-                return Problem("Entity set 'IAppBll.UserStory'  is null.");
+                return Problem("Entity set 'IAppBll.UserStories'  is null.");
             }
-            var userStories = await _context.UserStories.FindAsync(id);
-            if (userStories != null)
+            var UserStory = await _bll.UserStories.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserStory != null)
             {
-                _context.UserStories.Remove(userStories);
+                _bll.UserStories.Remove(UserStory);
             }
             
-            await _context.SaveChangesAsync();
+            await _bll.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool UserStoriesExists(Guid id)
+        private bool UserStoryExists(Guid id)
         {
-          return (_context.UserStories?.Any(e => e.Id == id)).GetValueOrDefault();
+          return _bll.UserStories?.Exists(id, User.GetUserId()) ?? false;
         }
     }
 }

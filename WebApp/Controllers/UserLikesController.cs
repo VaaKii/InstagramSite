@@ -1,51 +1,53 @@
+using App.Contracts.BLL;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using AutoMapper;
+using Base.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class UserLikesController : Controller
     {
-        private readonly IAppBll _context;
+        private readonly IAppBll _bll;
+        private readonly UserLikeMapper _mapper;
 
-        public UserLikesController(IAppBll context)
+        public UserLikesController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new UserLikeMapper(mapper);
         }
 
         // GET: UserLikes
         public async Task<IActionResult> Index()
         {
-            var appDbContext = _context.UserLikes.Include(u => u.AppUser).Include(u => u.UserPost);
-            return View(await appDbContext.ToListAsync());
+            var items = _bll.UserLikes.GetAll(User.GetUserId());
+            return View(_mapper.Map(items));
         }
 
         // GET: UserLikes/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+        public async Task<IActionResult> Details(Guid id)
         {
-            if (id == null || _context.UserLikes == null)
+            if (id == null || _bll.UserLikes == null)
             {
                 return NotFound();
             }
 
-            var userLike = await _context.UserLikes
-                .Include(u => u.AppUser)
-                .Include(u => u.UserPost)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (userLike == null)
+            var UserLike = await _bll.UserLikes.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserLike == null)
             {
                 return NotFound();
             }
 
-            return View(userLike);
+            return View(_mapper.Map(UserLike));
         }
 
         // GET: UserLikes/Create
         public IActionResult Create()
         {
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
-            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text");
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname");
             return View();
         }
 
@@ -54,36 +56,34 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("LikedId,AuthorId,CreatedAt,Id")] UserLike userLike)
+        public async Task<IActionResult> Create([Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] UserLike UserLike)
         {
             if (ModelState.IsValid)
             {
-                userLike.Id = Guid.NewGuid();
-                _context.Add(userLike);
-                await _context.SaveChangesAsync();
+                UserLike.Id = Guid.NewGuid();
+                _bll.UserLikes.Add(_mapper.Map(UserLike));
+                await _bll.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userLike.AppUserId);
-            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userLike.UserPostId);
-            return View(userLike);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserLike.AuthorId);
+            return View(UserLike);
         }
 
         // GET: UserLikes/Edit/5
-        public async Task<IActionResult> Edit(Guid? id)
+        public async Task<IActionResult> Edit(Guid id)
         {
-            if (id == null || _context.UserLikes == null)
+            if (id == null || _bll.UserLikes == null)
             {
                 return NotFound();
             }
 
-            var userLike = await _context.UserLikes.FindAsync(id);
-            if (userLike == null)
+            var UserLike = await _bll.UserLikes.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserLike == null)
             {
                 return NotFound();
             }
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userLike.AppUserId);
-            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userLike.UserPostId);
-            return View(userLike);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserLike.AuthorId);
+            return View(_mapper.Map(UserLike));
         }
 
         // POST: UserLikes/Edit/5
@@ -91,9 +91,9 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("LikedId,AuthorId,CreatedAt,Id")] UserLike userLike)
+        public async Task<IActionResult> Edit(Guid id, [Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] UserLike UserLike)
         {
-            if (id != userLike.Id)
+            if (id != UserLike.Id)
             {
                 return NotFound();
             }
@@ -102,12 +102,12 @@ namespace WebApp.Controllers
             {
                 try
                 {
-                    _context.Update(userLike);
-                    await _context.SaveChangesAsync();
+                    _bll.UserLikes.Update(_mapper.Map(UserLike));
+                    await _bll.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UserLikeExists(userLike.Id))
+                    if (!UserLikeExists(UserLike.Id))
                     {
                         return NotFound();
                     }
@@ -118,29 +118,26 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userLike.AppUserId);
-            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userLike.UserPostId);
-            return View(userLike);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserLike.AuthorId);
+            return View(UserLike);
         }
 
         // GET: UserLikes/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            if (id == null || _context.UserLikes == null)
+            if (id == null || _bll.UserLikes == null)
             {
                 return NotFound();
             }
 
-            var userLike = await _context.UserLikes
-                .Include(u => u.AppUser)
-                .Include(u => u.UserPost)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (userLike == null)
+            var UserLike = await _bll.UserLikes
+                .FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserLike == null)
             {
                 return NotFound();
             }
 
-            return View(userLike);
+            return View(_mapper.Map(UserLike));
         }
 
         // POST: UserLikes/Delete/5
@@ -148,23 +145,23 @@ namespace WebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            if (_context.UserLikes == null)
+            if (_bll.UserLikes == null)
             {
                 return Problem("Entity set 'IAppBll.UserLikes'  is null.");
             }
-            var userLike = await _context.UserLikes.FindAsync(id);
-            if (userLike != null)
+            var UserLike = await _bll.UserLikes.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserLike != null)
             {
-                _context.UserLikes.Remove(userLike);
+                _bll.UserLikes.Remove(UserLike);
             }
             
-            await _context.SaveChangesAsync();
+            await _bll.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool UserLikeExists(Guid id)
         {
-          return (_context.UserLikes?.Any(e => e.Id == id)).GetValueOrDefault();
+          return _bll.UserLikes?.Exists(id, User.GetUserId()) ?? false;
         }
     }
 }

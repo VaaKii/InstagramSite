@@ -1,47 +1,53 @@
+using App.Contracts.BLL;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using AutoMapper;
+using Base.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class TopicsController : Controller
     {
-        private readonly IAppBll _context;
+        private readonly IAppBll _bll;
+        private readonly TopicMapper _mapper;
 
-        public TopicsController(IAppBll context)
+        public TopicsController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new TopicMapper(mapper);
         }
 
         // GET: Topics
         public async Task<IActionResult> Index()
         {
-              return _context.Topics != null ? 
-                          View(await _context.Topics.ToListAsync()) :
-                          Problem("Entity set 'IAppBll.Topics'  is null.");
+            var items = _bll.Topics.GetAll(User.GetUserId());
+            return View(_mapper.Map(items));
         }
 
         // GET: Topics/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+        public async Task<IActionResult> Details(Guid id)
         {
-            if (id == null || _context.Topics == null)
+            if (id == null || _bll.Topics == null)
             {
                 return NotFound();
             }
 
-            var topic = await _context.Topics
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (topic == null)
+            var Topic = await _bll.Topics.FirstOrDefaultAsync(id, User.GetUserId());
+            if (Topic == null)
             {
                 return NotFound();
             }
 
-            return View(topic);
+            return View(_mapper.Map(Topic));
         }
 
         // GET: Topics/Create
         public IActionResult Create()
         {
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname");
             return View();
         }
 
@@ -50,32 +56,34 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,Description,CreatedAt,Id")] Topic topic)
+        public async Task<IActionResult> Create([Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] Topic Topic)
         {
             if (ModelState.IsValid)
             {
-                topic.Id = Guid.NewGuid();
-                _context.Add(topic);
-                await _context.SaveChangesAsync();
+                Topic.Id = Guid.NewGuid();
+                _bll.Topics.Add(_mapper.Map(Topic));
+                await _bll.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(topic);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", Topic.AuthorId);
+            return View(Topic);
         }
 
         // GET: Topics/Edit/5
-        public async Task<IActionResult> Edit(Guid? id)
+        public async Task<IActionResult> Edit(Guid id)
         {
-            if (id == null || _context.Topics == null)
+            if (id == null || _bll.Topics == null)
             {
                 return NotFound();
             }
 
-            var topic = await _context.Topics.FindAsync(id);
-            if (topic == null)
+            var Topic = await _bll.Topics.FirstOrDefaultAsync(id, User.GetUserId());
+            if (Topic == null)
             {
                 return NotFound();
             }
-            return View(topic);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", Topic.AuthorId);
+            return View(_mapper.Map(Topic));
         }
 
         // POST: Topics/Edit/5
@@ -83,9 +91,9 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Name,Description,CreatedAt,Id")] Topic topic)
+        public async Task<IActionResult> Edit(Guid id, [Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] Topic Topic)
         {
-            if (id != topic.Id)
+            if (id != Topic.Id)
             {
                 return NotFound();
             }
@@ -94,12 +102,12 @@ namespace WebApp.Controllers
             {
                 try
                 {
-                    _context.Update(topic);
-                    await _context.SaveChangesAsync();
+                    _bll.Topics.Update(_mapper.Map(Topic));
+                    await _bll.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TopicExists(topic.Id))
+                    if (!TopicExists(Topic.Id))
                     {
                         return NotFound();
                     }
@@ -110,25 +118,26 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(topic);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", Topic.AuthorId);
+            return View(Topic);
         }
 
         // GET: Topics/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            if (id == null || _context.Topics == null)
+            if (id == null || _bll.Topics == null)
             {
                 return NotFound();
             }
 
-            var topic = await _context.Topics
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (topic == null)
+            var Topic = await _bll.Topics
+                .FirstOrDefaultAsync(id, User.GetUserId());
+            if (Topic == null)
             {
                 return NotFound();
             }
 
-            return View(topic);
+            return View(_mapper.Map(Topic));
         }
 
         // POST: Topics/Delete/5
@@ -136,23 +145,23 @@ namespace WebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            if (_context.Topics == null)
+            if (_bll.Topics == null)
             {
                 return Problem("Entity set 'IAppBll.Topics'  is null.");
             }
-            var topic = await _context.Topics.FindAsync(id);
-            if (topic != null)
+            var Topic = await _bll.Topics.FirstOrDefaultAsync(id, User.GetUserId());
+            if (Topic != null)
             {
-                _context.Topics.Remove(topic);
+                _bll.Topics.Remove(Topic);
             }
             
-            await _context.SaveChangesAsync();
+            await _bll.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool TopicExists(Guid id)
         {
-          return (_context.Topics?.Any(e => e.Id == id)).GetValueOrDefault();
+          return _bll.Topics?.Exists(id, User.GetUserId()) ?? false;
         }
     }
 }

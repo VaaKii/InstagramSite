@@ -1,91 +1,99 @@
+using App.Contracts.BLL;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using AutoMapper;
+using Base.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class UserHashtagController : Controller
     {
-        private readonly IAppBll _context;
+        private readonly IAppBll _bll;
+        private readonly UserHashtagMapper _mapper;
 
-        public UserHashtagController(IAppBll context)
+        public UserHashtagController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new UserHashtagMapper(mapper);
         }
 
-        // GET: UserHashtag
+        // GET: UserHashtags
         public async Task<IActionResult> Index()
         {
-              return _context.UserHashtags != null ? 
-                          View(await _context.UserHashtags.ToListAsync()) :
-                          Problem("Entity set 'IAppBll.UserHashtags'  is null.");
+            var items = _bll.UserHashtags.GetAll(User.GetUserId());
+            return View(_mapper.Map(items));
         }
 
-        // GET: UserHashtag/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+        // GET: UserHashtags/Details/5
+        public async Task<IActionResult> Details(Guid id)
         {
-            if (id == null || _context.UserHashtags == null)
+            if (id == null || _bll.UserHashtags == null)
             {
                 return NotFound();
             }
 
-            var userHashtag = await _context.UserHashtags
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (userHashtag == null)
+            var UserHashtag = await _bll.UserHashtags.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserHashtag == null)
             {
                 return NotFound();
             }
 
-            return View(userHashtag);
+            return View(_mapper.Map(UserHashtag));
         }
 
-        // GET: UserHashtag/Create
+        // GET: UserHashtags/Create
         public IActionResult Create()
         {
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname");
             return View();
         }
 
-        // POST: UserHashtag/Create
+        // POST: UserHashtags/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("HashtagText,CreatedAt,Id")] UserHashtag userHashtag)
+        public async Task<IActionResult> Create([Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] UserHashtag UserHashtag)
         {
             if (ModelState.IsValid)
             {
-                userHashtag.Id = Guid.NewGuid();
-                _context.Add(userHashtag);
-                await _context.SaveChangesAsync();
+                UserHashtag.Id = Guid.NewGuid();
+                _bll.UserHashtags.Add(_mapper.Map(UserHashtag));
+                await _bll.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(userHashtag);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserHashtag.AuthorId);
+            return View(UserHashtag);
         }
 
-        // GET: UserHashtag/Edit/5
-        public async Task<IActionResult> Edit(Guid? id)
+        // GET: UserHashtags/Edit/5
+        public async Task<IActionResult> Edit(Guid id)
         {
-            if (id == null || _context.UserHashtags == null)
+            if (id == null || _bll.UserHashtags == null)
             {
                 return NotFound();
             }
 
-            var userHashtag = await _context.UserHashtags.FindAsync(id);
-            if (userHashtag == null)
+            var UserHashtag = await _bll.UserHashtags.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserHashtag == null)
             {
                 return NotFound();
             }
-            return View(userHashtag);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserHashtag.AuthorId);
+            return View(_mapper.Map(UserHashtag));
         }
 
-        // POST: UserHashtag/Edit/5
+        // POST: UserHashtags/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("HashtagText,CreatedAt,Id")] UserHashtag userHashtag)
+        public async Task<IActionResult> Edit(Guid id, [Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] UserHashtag UserHashtag)
         {
-            if (id != userHashtag.Id)
+            if (id != UserHashtag.Id)
             {
                 return NotFound();
             }
@@ -94,12 +102,12 @@ namespace WebApp.Controllers
             {
                 try
                 {
-                    _context.Update(userHashtag);
-                    await _context.SaveChangesAsync();
+                    _bll.UserHashtags.Update(_mapper.Map(UserHashtag));
+                    await _bll.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UserHashtagExists(userHashtag.Id))
+                    if (!UserHashtagExists(UserHashtag.Id))
                     {
                         return NotFound();
                     }
@@ -110,49 +118,50 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(userHashtag);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserHashtag.AuthorId);
+            return View(UserHashtag);
         }
 
-        // GET: UserHashtag/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
+        // GET: UserHashtags/Delete/5
+        public async Task<IActionResult> Delete(Guid id)
         {
-            if (id == null || _context.UserHashtags == null)
+            if (id == null || _bll.UserHashtags == null)
             {
                 return NotFound();
             }
 
-            var userHashtag = await _context.UserHashtags
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (userHashtag == null)
+            var UserHashtag = await _bll.UserHashtags
+                .FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserHashtag == null)
             {
                 return NotFound();
             }
 
-            return View(userHashtag);
+            return View(_mapper.Map(UserHashtag));
         }
 
-        // POST: UserHashtag/Delete/5
+        // POST: UserHashtags/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            if (_context.UserHashtags == null)
+            if (_bll.UserHashtags == null)
             {
                 return Problem("Entity set 'IAppBll.UserHashtags'  is null.");
             }
-            var userHashtag = await _context.UserHashtags.FindAsync(id);
-            if (userHashtag != null)
+            var UserHashtag = await _bll.UserHashtags.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserHashtag != null)
             {
-                _context.UserHashtags.Remove(userHashtag);
+                _bll.UserHashtags.Remove(UserHashtag);
             }
             
-            await _context.SaveChangesAsync();
+            await _bll.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool UserHashtagExists(Guid id)
         {
-          return (_context.UserHashtags?.Any(e => e.Id == id)).GetValueOrDefault();
+          return _bll.UserHashtags?.Exists(id, User.GetUserId()) ?? false;
         }
     }
 }

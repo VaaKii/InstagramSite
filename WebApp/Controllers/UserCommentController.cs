@@ -1,99 +1,99 @@
+using App.Contracts.BLL;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using AutoMapper;
+using Base.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class UserCommentController : Controller
     {
-        private readonly IAppBll _context;
+        private readonly IAppBll _bll;
+        private readonly UserCommentMapper _mapper;
 
-        public UserCommentController(IAppBll context)
+        public UserCommentController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new UserCommentMapper(mapper);
         }
 
-        // GET: UserComment
+        // GET: UserComments
         public async Task<IActionResult> Index()
         {
-            var appDbContext = _context.UserComments.Include(u => u.AppUser).Include(u => u.UserPost);
-            return View(await appDbContext.ToListAsync());
+            var items = _bll.UserComments.GetAll(User.GetUserId());
+            return View(_mapper.Map(items));
         }
 
-        // GET: UserComment/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+        // GET: UserComments/Details/5
+        public async Task<IActionResult> Details(Guid id)
         {
-            if (id == null || _context.UserComments == null)
+            if (id == null || _bll.UserComments == null)
             {
                 return NotFound();
             }
 
-            var userComment = await _context.UserComments
-                .Include(u => u.AppUser)
-                .Include(u => u.UserPost)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (userComment == null)
+            var UserComment = await _bll.UserComments.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserComment == null)
             {
                 return NotFound();
             }
 
-            return View(userComment);
+            return View(_mapper.Map(UserComment));
         }
 
-        // GET: UserComment/Create
+        // GET: UserComments/Create
         public IActionResult Create()
         {
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
-            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text");
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname");
             return View();
         }
 
-        // POST: UserComment/Create
+        // POST: UserComments/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CommentText,LikedId,AuthorId,CreatedAt,Id")] UserComment userComment)
+        public async Task<IActionResult> Create([Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] UserComment UserComment)
         {
             if (ModelState.IsValid)
             {
-                userComment.Id = Guid.NewGuid();
-                _context.Add(userComment);
-                await _context.SaveChangesAsync();
+                UserComment.Id = Guid.NewGuid();
+                _bll.UserComments.Add(_mapper.Map(UserComment));
+                await _bll.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userComment.AppUserId);
-            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userComment.UserPostId);
-            return View(userComment);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserComment.AuthorId);
+            return View(UserComment);
         }
 
-        // GET: UserComment/Edit/5
-        public async Task<IActionResult> Edit(Guid? id)
+        // GET: UserComments/Edit/5
+        public async Task<IActionResult> Edit(Guid id)
         {
-            if (id == null || _context.UserComments == null)
+            if (id == null || _bll.UserComments == null)
             {
                 return NotFound();
             }
 
-            var userComment = await _context.UserComments.FindAsync(id);
-            if (userComment == null)
+            var UserComment = await _bll.UserComments.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserComment == null)
             {
                 return NotFound();
             }
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userComment.AppUserId);
-            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userComment.UserPostId);
-            return View(userComment);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserComment.AuthorId);
+            return View(_mapper.Map(UserComment));
         }
 
-        // POST: UserComment/Edit/5
+        // POST: UserComments/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("CommentText,LikedId,AuthorId,CreatedAt,Id")] UserComment userComment)
+        public async Task<IActionResult> Edit(Guid id, [Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] UserComment UserComment)
         {
-            if (id != userComment.Id)
+            if (id != UserComment.Id)
             {
                 return NotFound();
             }
@@ -102,12 +102,12 @@ namespace WebApp.Controllers
             {
                 try
                 {
-                    _context.Update(userComment);
-                    await _context.SaveChangesAsync();
+                    _bll.UserComments.Update(_mapper.Map(UserComment));
+                    await _bll.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UserCommentExists(userComment.Id))
+                    if (!UserCommentExists(UserComment.Id))
                     {
                         return NotFound();
                     }
@@ -118,53 +118,50 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AuthorId"] = new SelectList(_context.AppUsers, "Id", "Firstname", userComment.AppUserId);
-            ViewData["LikedId"] = new SelectList(_context.UserPosts, "Id", "Text", userComment.UserPostId);
-            return View(userComment);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers.GetAll(User.GetUserId()), "Id", "Firstname", UserComment.AuthorId);
+            return View(UserComment);
         }
 
-        // GET: UserComment/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
+        // GET: UserComments/Delete/5
+        public async Task<IActionResult> Delete(Guid id)
         {
-            if (id == null || _context.UserComments == null)
+            if (id == null || _bll.UserComments == null)
             {
                 return NotFound();
             }
 
-            var userComment = await _context.UserComments
-                .Include(u => u.AppUser)
-                .Include(u => u.UserPost)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (userComment == null)
+            var UserComment = await _bll.UserComments
+                .FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserComment == null)
             {
                 return NotFound();
             }
 
-            return View(userComment);
+            return View(_mapper.Map(UserComment));
         }
 
-        // POST: UserComment/Delete/5
+        // POST: UserComments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            if (_context.UserComments == null)
+            if (_bll.UserComments == null)
             {
                 return Problem("Entity set 'IAppBll.UserComments'  is null.");
             }
-            var userComment = await _context.UserComments.FindAsync(id);
-            if (userComment != null)
+            var UserComment = await _bll.UserComments.FirstOrDefaultAsync(id, User.GetUserId());
+            if (UserComment != null)
             {
-                _context.UserComments.Remove(userComment);
+                _bll.UserComments.Remove(UserComment);
             }
             
-            await _context.SaveChangesAsync();
+            await _bll.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool UserCommentExists(Guid id)
         {
-          return (_context.UserComments?.Any(e => e.Id == id)).GetValueOrDefault();
+          return _bll.UserComments?.Exists(id, User.GetUserId()) ?? false;
         }
     }
 }
