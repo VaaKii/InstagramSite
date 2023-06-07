@@ -1,10 +1,15 @@
+﻿using App.BLL.DTO.Identity;
+using Base.Contracts.Domain;
 using Base.Domain;
-using App.Public.DTO.v1.Identity;
 
 namespace App.Public.DTO.v1;
 
-public class Follow : DomainEntityId // TODO UPDATE DB!
+public class Follow : DomainEntityMetaId, IDomainAppUser<Guid, AppUser>
 {
-    public Guid AppUserId { get; set; }
-    public AppUser? AppUser { get; set; }
+	public Guid AuthorId { get; set; }
+	public AppUser? Author { get; set; }
+	
+	public Guid FolloweeId { get; set; }
+	public AppUser? Followee { get; set; }
 }
+

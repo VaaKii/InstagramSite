@@ -1,9 +1,15 @@
+﻿using App.BLL.DTO.Identity;
+using Base.Contracts.Domain;
 using Base.Domain;
 
 namespace App.Public.DTO.v1;
 
-public class UserHashtag : DomainEntityId
+public class UserHashtag : DomainEntityMetaId, IDomainAppUser<Guid, AppUser>
 {
-    public string HashtagText { get; set; } = default!;
-    public ICollection<UserPost>? Posts { get; set; }
+	public Guid AuthorId { get; set; }
+	public AppUser? Author { get; set; }
+	
+	public string HashtagText { get; set; } = default!;
+	public ICollection<UserPost>? Posts { get; set; }
 }
+
