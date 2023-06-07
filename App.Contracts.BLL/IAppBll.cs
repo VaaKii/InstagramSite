@@ -3,7 +3,7 @@ using Base.Contracts.BLL;
 
 namespace App.Contracts.BLL;
 
-public interface IAppBLL : IBLL
+public interface IAppBll : IBLL
 {
     IAppUserService AppUsers { get; }
     IDirectMessageService DirectMessages { get; }
@@ -14,5 +14,6 @@ public interface IAppBLL : IBLL
     IUserPostService UserPosts { get; }
     IUserLikeService UserLikes { get; }
     IUserStoriesService UserStories { get; }
+    IRefreshTokenService RefreshTokens { get; }
     
 }

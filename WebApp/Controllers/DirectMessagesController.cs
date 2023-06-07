@@ -1,42 +1,36 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using App.Contracts.BLL;
+using Base.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
-using App.Domain;
 
 namespace WebApp.Controllers
 {
     public class DirectMessagesController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _bll;
 
-        public DirectMessagesController(AppDbContext context)
+        public DirectMessagesController(IAppBll bll)
         {
-            _context = context;
+            _bll = bll;
         }
 
         // GET: DirectMessages
         public async Task<IActionResult> Index()
         {
-            var appDbContext = _context.DirectMessages.Include(d => d.AppUser);
-            return View(await appDbContext.ToListAsync());
+            var items = _bll.DirectMessages.GetAll(User.GetUserId());
+            return View(items);
         }
 
         // GET: DirectMessages/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+        public async Task<IActionResult> Details(Guid id)
         {
-            if (id == null || _context.DirectMessages == null)
+            if (id == null || _bll.DirectMessages == null)
             {
                 return NotFound();
             }
 
-            var directMessage = await _context.DirectMessages
-                .Include(d => d.AppUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var directMessage = await _bll.DirectMessages.FirstOrDefaultAsync(id, User.GetUserId());
             if (directMessage == null)
             {
                 return NotFound();
@@ -48,7 +42,7 @@ namespace WebApp.Controllers
         // GET: DirectMessages/Create
         public IActionResult Create()
         {
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname");
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers, "Id", "Firstname");
             return View();
         }
 
@@ -57,33 +51,33 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AppUserId,Message,SenderId,CreatedAt,Id")] DirectMessage directMessage)
+        public async Task<IActionResult> Create([Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] DirectMessage directMessage)
         {
             if (ModelState.IsValid)
             {
                 directMessage.Id = Guid.NewGuid();
-                _context.Add(directMessage);
-                await _context.SaveChangesAsync();
+                _bll.Add(directMessage);
+                await _bll.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", directMessage.AppUserId);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers, "Id", "Firstname", directMessage.AppUserId);
             return View(directMessage);
         }
 
         // GET: DirectMessages/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
-            if (id == null || _context.DirectMessages == null)
+            if (id == null || _bll.DirectMessages == null)
             {
                 return NotFound();
             }
 
-            var directMessage = await _context.DirectMessages.FindAsync(id);
+            var directMessage = await _bll.DirectMessages.FindAsync(id);
             if (directMessage == null)
             {
                 return NotFound();
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", directMessage.AppUserId);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers, "Id", "Firstname", directMessage.AppUserId);
             return View(directMessage);
         }
 
@@ -92,7 +86,7 @@ namespace WebApp.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("AppUserId,Message,SenderId,CreatedAt,Id")] DirectMessage directMessage)
+        public async Task<IActionResult> Edit(Guid id, [Bind("AuthorId,Message,ReceiverId,CreatedAt,Id")] DirectMessage directMessage)
         {
             if (id != directMessage.Id)
             {
@@ -103,8 +97,8 @@ namespace WebApp.Controllers
             {
                 try
                 {
-                    _context.Update(directMessage);
-                    await _context.SaveChangesAsync();
+                    _bll.Update(directMessage);
+                    await _bll.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -119,19 +113,19 @@ namespace WebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.AppUsers, "Id", "Firstname", directMessage.AppUserId);
+            ViewData["AuthorId"] = new SelectList(_bll.AppUsers, "Id", "Firstname", directMessage.AppUserId);
             return View(directMessage);
         }
 
         // GET: DirectMessages/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
-            if (id == null || _context.DirectMessages == null)
+            if (id == null || _bll.DirectMessages == null)
             {
                 return NotFound();
             }
 
-            var directMessage = await _context.DirectMessages
+            var directMessage = await _bll.DirectMessages
                 .Include(d => d.AppUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (directMessage == null)
@@ -147,23 +141,23 @@ namespace WebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            if (_context.DirectMessages == null)
+            if (_bll.DirectMessages == null)
             {
-                return Problem("Entity set 'AppDbContext.DirectMessages'  is null.");
+                return Problem("Entity set 'IAppBll.DirectMessages'  is null.");
             }
-            var directMessage = await _context.DirectMessages.FindAsync(id);
+            var directMessage = await _bll.DirectMessages.FindAsync(id);
             if (directMessage != null)
             {
-                _context.DirectMessages.Remove(directMessage);
+                _bll.DirectMessages.Remove(directMessage);
             }
             
-            await _context.SaveChangesAsync();
+            await _bll.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool DirectMessageExists(Guid id)
         {
-          return (_context.DirectMessages?.Any(e => e.Id == id)).GetValueOrDefault();
+          return (_bll.DirectMessages?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

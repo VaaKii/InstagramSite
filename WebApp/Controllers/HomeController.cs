@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
 using App.Domain;
 using WebApp.ViewModels;
 
@@ -12,9 +6,9 @@ namespace WebApp.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _context;
 
-        public HomeController(AppDbContext context)
+        public HomeController(IAppBll context)
         {
             _context = context;
         }

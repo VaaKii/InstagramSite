@@ -1,125 +1,89 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using App.Contracts.BLL;
+using AutoMapper;
+using Base.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
-using App.Domain;
 
 namespace WebApp.ApiControllers
 {
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    public class DirectMessageController : ControllerBase
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public class DirectMessagesController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _bll;
+        private readonly DirectMessageMapper _mapper;
 
-        public DirectMessageController(AppDbContext context)
+        public DirectMessagesController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new DirectMessageMapper(mapper);
         }
 
         // GET: api/DirectMessage
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DirectMessage>>> GetDirectMessages()
+        public async Task<ActionResult<IEnumerable<DirectMessage>>> GetAll()
         {
-          if (_context.DirectMessages == null)
-          {
-              return NotFound();
-          }
-            return await _context.DirectMessages.ToListAsync();
+            var items = await _bll.DirectMessages.GetAllAsync(User.GetUserId());
+            return Ok(items.Select(i => _mapper.Map(i)));
         }
 
         // GET: api/DirectMessage/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<DirectMessage>> GetDirectMessage(Guid id)
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<DirectMessage>> Get(Guid id)
         {
-          if (_context.DirectMessages == null)
-          {
-              return NotFound();
-          }
-            var directMessage = await _context.DirectMessages.FindAsync(id);
-
-            if (directMessage == null)
-            {
+            var item = await _bll.DirectMessages.FirstOrDefaultAsync(id, User.GetUserId());
+            if (item == null)
                 return NotFound();
-            }
 
-            return directMessage;
-        }
+            var mapped = _mapper.Map(item);
+            if (mapped == null)
+                return NotFound();
 
-        // PUT: api/DirectMessage/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutDirectMessage(Guid id, DirectMessage directMessage)
-        {
-            if (id != directMessage.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(directMessage).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DirectMessageExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return mapped;
         }
 
         // POST: api/DirectMessage
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<DirectMessage>> PostDirectMessage(DirectMessage directMessage)
+        public async Task<ActionResult<DirectMessage>> Post(DirectMessage item)
         {
-          if (_context.DirectMessages == null)
-          {
-              return Problem("Entity set 'AppDbContext.DirectMessages'  is null.");
-          }
-            _context.DirectMessages.Add(directMessage);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            var addedItem = _bll.DirectMessages.Add(bllItem);
+            await _bll.SaveChangesAsync();
 
-            return CreatedAtAction("GetDirectMessage", new { id = directMessage.Id }, directMessage);
+            var returnItem = _mapper.Map(addedItem);
+            return CreatedAtAction(nameof(Get), new {id = returnItem!.Id}, item);
         }
 
-        // DELETE: api/DirectMessage/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDirectMessage(Guid id)
+        // PUT: api/DirectMessage/5
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Put(Guid id, DirectMessage item)
         {
-            if (_context.DirectMessages == null)
-            {
+            if (!await _bll.DirectMessages.ExistsAsync(id, User.GetUserId()))
                 return NotFound();
-            }
-            var directMessage = await _context.DirectMessages.FindAsync(id);
-            if (directMessage == null)
-            {
-                return NotFound();
-            }
 
-            _context.DirectMessages.Remove(directMessage);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            _bll.DirectMessages.Update(bllItem, User.GetUserId());
+            await _bll.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool DirectMessageExists(Guid id)
+        // DELETE: api/DirectMessage/5
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            return (_context.DirectMessages?.Any(e => e.Id == id)).GetValueOrDefault();
+            if (!await _bll.DirectMessages.ExistsAsync(id, User.GetUserId()))
+                return NotFound();
+
+            await _bll.DirectMessages.RemoveAsync(id, User.GetUserId());
+            await _bll.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

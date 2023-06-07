@@ -1,125 +1,89 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using App.Public.DTO.v1;
+using App.Public.DTO.v1.Mappers;
+using App.Contracts.BLL;
+using AutoMapper;
+using Base.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using App.DAL.EF;
-using App.Domain;
 
 namespace WebApp.ApiControllers
 {
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    public class UserHashtagController : ControllerBase
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public class UserHashtagsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IAppBll _bll;
+        private readonly UserHashtagMapper _mapper;
 
-        public UserHashtagController(AppDbContext context)
+        public UserHashtagsController(IAppBll bll, IMapper mapper)
         {
-            _context = context;
+            _bll = bll;
+            _mapper = new UserHashtagMapper(mapper);
         }
 
         // GET: api/UserHashtag
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserHashtag>>> GetUserHashtags()
+        public async Task<ActionResult<IEnumerable<UserHashtag>>> GetAll()
         {
-          if (_context.UserHashtags == null)
-          {
-              return NotFound();
-          }
-            return await _context.UserHashtags.ToListAsync();
+            var items = await _bll.UserHashtags.GetAllAsync(User.GetUserId());
+            return Ok(items.Select(i => _mapper.Map(i)));
         }
 
         // GET: api/UserHashtag/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserHashtag>> GetUserHashtag(Guid id)
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<UserHashtag>> Get(Guid id)
         {
-          if (_context.UserHashtags == null)
-          {
-              return NotFound();
-          }
-            var userHashtag = await _context.UserHashtags.FindAsync(id);
-
-            if (userHashtag == null)
-            {
+            var item = await _bll.UserHashtags.FirstOrDefaultAsync(id, User.GetUserId());
+            if (item == null)
                 return NotFound();
-            }
 
-            return userHashtag;
-        }
+            var mapped = _mapper.Map(item);
+            if (mapped == null)
+                return NotFound();
 
-        // PUT: api/UserHashtag/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUserHashtag(Guid id, UserHashtag userHashtag)
-        {
-            if (id != userHashtag.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(userHashtag).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserHashtagExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return mapped;
         }
 
         // POST: api/UserHashtag
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<UserHashtag>> PostUserHashtag(UserHashtag userHashtag)
+        public async Task<ActionResult<UserHashtag>> Post(UserHashtag item)
         {
-          if (_context.UserHashtags == null)
-          {
-              return Problem("Entity set 'AppDbContext.UserHashtags'  is null.");
-          }
-            _context.UserHashtags.Add(userHashtag);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            var addedItem = _bll.UserHashtags.Add(bllItem);
+            await _bll.SaveChangesAsync();
 
-            return CreatedAtAction("GetUserHashtag", new { id = userHashtag.Id }, userHashtag);
+            var returnItem = _mapper.Map(addedItem);
+            return CreatedAtAction(nameof(Get), new {id = returnItem!.Id}, item);
         }
 
-        // DELETE: api/UserHashtag/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUserHashtag(Guid id)
+        // PUT: api/UserHashtag/5
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Put(Guid id, UserHashtag item)
         {
-            if (_context.UserHashtags == null)
-            {
+            if (!await _bll.UserHashtags.ExistsAsync(id, User.GetUserId()))
                 return NotFound();
-            }
-            var userHashtag = await _context.UserHashtags.FindAsync(id);
-            if (userHashtag == null)
-            {
-                return NotFound();
-            }
 
-            _context.UserHashtags.Remove(userHashtag);
-            await _context.SaveChangesAsync();
+            var bllItem = _mapper.Map(item);
+            _bll.UserHashtags.Update(bllItem, User.GetUserId());
+            await _bll.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool UserHashtagExists(Guid id)
+        // DELETE: api/UserHashtag/5
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            return (_context.UserHashtags?.Any(e => e.Id == id)).GetValueOrDefault();
+            if (!await _bll.UserHashtags.ExistsAsync(id, User.GetUserId()))
+                return NotFound();
+
+            await _bll.UserHashtags.RemoveAsync(id, User.GetUserId());
+            await _bll.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

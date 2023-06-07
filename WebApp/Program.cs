@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Text;
 using App.BLL;
+using App.BLL.DTO.Identity;
 using App.Contracts.BLL;
 using App.Contracts.DAL;
 using App.DAL.EF;
-using App.Domain.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WebApp;
+using AppRole = App.DAL.DTO.Identity.AppRole;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql("Host=placeholder.postgres.database.azure.com;Port=5432;Username=pass;Password=Support1;database=postgres;"));
 
 builder.Services.AddScoped<IAppUnitOfWork, AppUOW>();
-builder.Services.AddScoped<IAppBLL, AppBLL>();
+builder.Services.AddScoped<IAppBll, AppBll>();
 
 builder.Services.AddAutoMapper(
     typeof(App.DAL.EF.AutomapperConfig),

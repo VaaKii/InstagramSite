@@ -1,15 +1,18 @@
 ﻿
 using App.Domain.Identity;
+using Base.Contracts.Domain;
 using Base.Domain;
 
 namespace App.Domain;
 
-	public class DirectMessage: DomainEntityMetaId
+	public class DirectMessage: DomainEntityMetaId, IDomainAppUser<Guid, AppUser>
 	{
-	public Guid AppUserId { get; set; }
-	public AppUser? AppUser { get; set; }
 	public string? Message { get; set; }
 	
-	public Guid SenderId { get; set; }
+	public Guid ReceiverId { get; set; }
+	public AppUser? Receiver { get; set; }
+	
+	public Guid AuthorId { get; set; }
+	public AppUser? Author { get; set; }
 	}
 

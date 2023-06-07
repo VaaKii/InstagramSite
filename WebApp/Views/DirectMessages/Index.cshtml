@@ -1,4 +1,4 @@
-@model IEnumerable<App.Domain.DirectMessage>
+@model IEnumerable<App.BLL.DTO.DirectMessage>
 
 @{
     ViewData["Title"] = "Index";
@@ -13,31 +13,27 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.AppUser)
+                @Html.DisplayNameFor(model => model.Author)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Message)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.SenderId)
+                @Html.DisplayNameFor(model => model.Receiver)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.AppUser!.Firstname)
+                @Html.DisplayFor(modelItem => item.Author!.Email)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Message)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.SenderId)
+                @Html.DisplayFor(modelItem => item.Receiver!.Email)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.CreatedAt)
